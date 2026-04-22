@@ -3,5 +3,5 @@
 ../Core/Src/main.c:228:13:MX_GPIO_Init	1
 ../Core/Src/main.c:278:6:StartDefaultTask	1
 ../Core/Src/main.c:310:6:MPU_Config	1
-../Core/Src/main.c:395:6:HAL_TIM_PeriodElapsedCallback	2
-../Core/Src/main.c:413:6:Error_Handler	1
+../Core/Src/main.c:379:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:397:6:Error_Handler	1
