@@ -64,21 +64,6 @@ const uart_inferface_t uart_manage_table[] = {
     .send_fifo_size = sizeof(uart1_send_fifo_buff),
     .send_callback = NULL,
   },
-  {
-    .name = "gps",
-    .uart_h = &huart5,
-    .dma_h = &hdma_uart5_rx,
-    .recv_buffer = uart5_recv_buff,
-    .recv_buffer_size = sizeof(uart5_recv_buff),
-    .process_buffer = uart5_process_buff,
-    .process_buffer_size = sizeof(uart5_process_buff),
-    .recv_callback = NULL,// ring_task_mode
-    .send_buffer = uart5_send_buff,
-    .send_buffer_size = sizeof(uart5_send_buff),
-    .send_fifo_buffer = uart5_send_fifo_buff,
-    .send_fifo_size = sizeof(uart5_send_fifo_buff),
-    .send_callback = NULL,
-  },
 };
 
 #define uart_manage_table_size \
@@ -167,22 +152,22 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
       }
     }
 
-   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  //  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-  if (huart->Instance == huart2.Instance)
-  {
-    if (RFID_client.rx_buf[0] == 0x1B && RFID_client.rx_buf[1] == 0x39 && RFID_client.rx_buf[2] == 0x01) // RFID从机
-    {
-      if (size > 0)
-      {
-        memcpy(RFID_client.Rx_RFID_buf, RFID_client.rx_buf, size);
-        RFID_client.Rx_RFID_len = (uint8_t)size;
-      }
-      HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RFID_client.rx_buf, (uint16_t)sizeof(RFID_client.rx_buf));
-      xEventGroupSetBitsFromISR(eg, EVENT_RFID_RX, &xHigherPriorityTaskWoken);
-    }
-  }
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  // if (huart->Instance == huart2.Instance)
+  // {
+  //   if (RFID_client.rx_buf[0] == 0x1B && RFID_client.rx_buf[1] == 0x39 && RFID_client.rx_buf[2] == 0x01) // RFID从机
+  //   {
+  //     if (size > 0)
+  //     {
+  //       memcpy(RFID_client.Rx_RFID_buf, RFID_client.rx_buf, size);
+  //       RFID_client.Rx_RFID_len = (uint8_t)size;
+  //     }
+  //     HAL_UARTEx_ReceiveToIdle_DMA(&huart2, RFID_client.rx_buf, (uint16_t)sizeof(RFID_client.rx_buf));
+  //     xEventGroupSetBitsFromISR(eg, EVENT_RFID_RX, &xHigherPriorityTaskWoken);
+  //   }
+  // }
+  // portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
