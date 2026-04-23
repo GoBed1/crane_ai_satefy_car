@@ -1,6 +1,16 @@
+# 忽略编译输出的文件夹
 Debug/
+Release/
 
+# 忽略各种编译生成的中间文件和结果文件
+*.o
+*.d
+*.su
+*.elf
+*.map
+*.list
+*.hex
+*.bin
 
-.vscode/
-
-.settings/
+# 忽略一些特定的 IDE 配置文件 (可选，根据需要)
+*.launch

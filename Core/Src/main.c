@@ -25,6 +25,9 @@
 /* USER CODE BEGIN Includes */
 /* ETH_CODE: add lwiperf, see comment in StartDefaultTask function */
 #include "lwip/apps/lwiperf.h"
+#include "modbus_tcp_server_task.h"
+#include "modbus_tcp_server_reg.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -280,6 +283,12 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+   extern struct netif gnetif;
+  while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
+  {
+    osDelay(100);
+  }
+  modbus_tcp_init_server();
   /* ETH_CODE: Adding lwiperf to measure TCP/IP performance.
    * iperf 2.0.6 (or older?) is required for the tests. Newer iperf2 versions
    * might work without data check, but they send different headers.
@@ -288,7 +297,7 @@ void StartDefaultTask(void *argument)
    * The default include path should already contain
    * 'lwip/apps/lwiperf.h'
    */
-  osDelay(1000); /* wait for the network to be up */
+   /* wait for the network to be up */
   // LOCK_TCPIP_CORE();
   // // lwiperf_start_tcp_server_default(NULL, NULL);
 
@@ -297,9 +306,12 @@ void StartDefaultTask(void *argument)
   // lwiperf_start_tcp_client_default(&remote_addr, NULL, NULL);
   // UNLOCK_TCPIP_CORE();
   /* Infinite loop */
+  uint16_t count = 0;
   for(;;)
   {
     HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
+    count=count % 100;
+    mb_set_holding_reg_by_address(1, count++);
     osDelay(1000);
   }
   /* USER CODE END 5 */
