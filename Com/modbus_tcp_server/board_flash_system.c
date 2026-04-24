@@ -34,36 +34,37 @@ fs_err_t fs_mount_medium(void)
 
 fs_err_t fs_load_modbus_reg(void)
 {
-    if (board_file_system == NULL)
+   if (board_file_system == NULL)
     {
         return FS_ERR_NOT_MOUNTED;
     }
 
     lfs_file_t file;
     int err = lfs_file_open(board_file_system, &file, MODBUS_REGS_FILE, LFS_O_RDONLY);
-    if (err != FS_OK)
+    if (err < 0) // 【修改】LittleFS 返回负数才是错
     {
-        return err;
+        return FS_ERR_OPEN;
     }
 
+    // 成功返回读取字节数(20)，失败返回负数
     err = lfs_file_read(board_file_system, &file, coil_regs_database, sizeof(coil_regs_database));
-    if (err != FS_OK)
+    if (err < 0) // 【修改】必须用 < 0 
     {
         lfs_file_close(board_file_system, &file);
-        return err;
+        return FS_ERR_READ_COIL;
     }
 
     err = lfs_file_read(board_file_system, &file, holding_regs_database, sizeof(holding_regs_database));
-    if (err != FS_OK)
+    if (err < 0) // 【修改】必须用 < 0
     {
         lfs_file_close(board_file_system, &file);
-        return err;
+        return FS_ERR_READ_HOLDING;
     }
 
     err = lfs_file_close(board_file_system, &file);
-    if (err != FS_OK)
+    if (err < 0) // 【修改】必须用 < 0
     {
-        return err;
+        return FS_ERR_CLOSE;
     }
 
     return FS_OK;
@@ -71,15 +72,15 @@ fs_err_t fs_load_modbus_reg(void)
 
 fs_err_t fs_write_modbus_reg(lfs_file_t *file)
 {
-    int err;
+   int err;
     err = lfs_file_write(board_file_system, file, coil_regs_database, sizeof(coil_regs_database));
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         return FS_ERR_WRITE;
     }
 
     err = lfs_file_write(board_file_system, file, holding_regs_database, sizeof(holding_regs_database));
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         return FS_ERR_WRITE;
     }
@@ -159,27 +160,27 @@ fs_err_t fs_recreate_modbus_reg(void)
 {
     lfs_file_t new_file;
     int err = lfs_file_open(board_file_system, &new_file, MODBUS_REGS_FILE, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         return FS_ERR_OPEN;
     }
 
     err = lfs_file_write(board_file_system, &new_file, coil_regs_database, sizeof(coil_regs_database));
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         lfs_file_close(board_file_system, &new_file);
         return FS_ERR_WRITE_COIL;
     }
 
     err = lfs_file_write(board_file_system, &new_file, holding_regs_database, sizeof(holding_regs_database));
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         lfs_file_close(board_file_system, &new_file);
         return FS_ERR_WRITE_HOLDING;
     }
 
     err = lfs_file_close(board_file_system, &new_file);
-    if (err != 0)
+    if (err < 0) // 【修改】
     {
         return FS_ERR_CLOSE;
     }
