@@ -63,7 +63,8 @@ void Error_Handler(void);
 #define LED0_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
-
+#define LOG_ERR(tag, ...) printf(__VA_ARGS__)
+#define LOG_INFO(tag, ...) printf(__VA_ARGS__)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

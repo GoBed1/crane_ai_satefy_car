@@ -1,13 +1,23 @@
-#ifndef MODBUS_TCP_SERVER_REG_H
-#define MODBUS_TCP_SERVER_REG_H
+#ifndef MODBUS_TCP_REGISTERS_H
+#define MODBUS_TCP_REGISTERS_H
 
 #include <stdint.h>
-#include <stddef.h>
 
-#define REG_DATABASE_HOLDING_SIZE 100
-#define REG_DATABASE_INPUT_SIZE  100
-#define REG_DATABASE_COILS_SIZE  100
-/* ---------------- 错误码定义 ---------------- */
+#define REG_TYPE_HOLDING_REGISTER 0x01
+#define REG_TYPE_INPUT_REGISTER   0x02
+#define REG_TYPE_COIL             0x04
+#define REG_TYPE_ALL              0x07
+
+
+#define REG_DATABASE_HOLDING_SIZE 50
+#define REG_DATABASE_INPUT_SIZE   100
+#define REG_DATABASE_COILS_SIZE   50
+
+extern uint16_t holding_regs_database[REG_DATABASE_HOLDING_SIZE];
+extern uint16_t input_regs_database[REG_DATABASE_INPUT_SIZE];
+extern uint8_t  coil_regs_database[REG_DATABASE_COILS_SIZE];
+extern uint8_t  mb_tcp_init_flag;
+
 typedef enum
 {
     MB_OK                        = 0x00,
@@ -16,54 +26,209 @@ typedef enum
     MB_ERR_TYPE                  = 0x04,
     MB_ERR_ACQUIRE_MUTEX_TIMEOUT = 0x08,
     MB_ERR_NULL_POINTER          = 0x10,
-    MB_ERR_NOT_INITIALIZED       = 0x20
+    MB_ERR_FILE_OPERATION        = 0x20,
+    MB_ERR_WRITE_FLASH           = 0x40,
+	MB_ERR_DEFAULT_FAIL          = 0x41
 } mb_err_t;
 
-/* ---------------- 寄存器类型定义 ---------------- */
-typedef enum {
-    MB_REG_TYPE_HOLDING = 1,  // 保持寄存器 (16 bit) - 可读可写
-    MB_REG_TYPE_INPUT   = 2,  // 输入寄存器 (16 bit) - 只读
-    MB_REG_TYPE_COIL    = 3   // 线圈 (1 bit，实际按1 byte存储) - 可读可写
-} mb_reg_type_t;
-
-#define MB_MANAGE_MAX_AREAS 16U  // 核心引擎支持注册的最大独立内存块数量
-
-/* ---------------- 核心注册表结构体 ---------------- */
 typedef struct {
-    char name[32];            // 业务区块名称，例如 "SystemConfig"
-    mb_reg_type_t type;       // 寄存器类型
-    uint16_t start_address;   // 该区块在 Modbus 中的起始物理地址
-    uint16_t size;            // 该区块包含的寄存器数量
-    void *data_buffer;        // 指向外部具体内存数组的指针
-    uint8_t used;             // 内部标志位(外部初始化表时填 0 即可)
-} mb_reg_area_t;
+    uint16_t idx;
+    uint8_t  type;
+    uint16_t address;
+    uint8_t  default_value;
+} mb_coil_reg_t;
 
-extern uint8_t mb_tcp_init_flag;
+typedef struct
+{
+    uint16_t idx;
+    uint8_t  type;
+    uint16_t address;
+    uint16_t default_value;
+} mb_reg_t;
 
-/* =====================================================================
- * 新增：表驱动初始化接口 (供业务层调用)
- * ===================================================================== */
-mb_err_t mb_manage_init_table(const mb_reg_area_t *table, uint16_t table_size);
+enum {
+    REG_STM_RST = 0,
+    REG_INFO_COIL_SIZE
+};
 
+static const mb_coil_reg_t coli_reg_info[REG_INFO_COIL_SIZE] = {
+    {REG_STM_RST, REG_TYPE_COIL, 0, 0},
+};
 
-/* =====================================================================
- * 保持不变：标准的寄存器读写 API (供协议解析层调用)
- * ===================================================================== */
+enum {
+    REG_SYSTEM_VERSION = 0,
+    REG_SYSTIME_SOURCE,
+    REG_NTP_UPDATE_TIMESTAMP_H,
+    REG_NTP_UPDATE_TIMESTAMP_L,
 
-// 保持寄存器 (Holding Register) - 03, 06, 16功能码
+    REG_GROUP_STATION_NUM,
+    REG_GROUP_STATION_ONLINE,
+
+    REG_C0_STATION_ONLINE,
+    REG_C0_ENCODER_ONLINE,
+    REG_C0_UPDATE_TIMESTAMP_H,
+    REG_C0_UPDATE_TIMESTAMP_L,
+    REG_C0_SLEWING_CIRCLE,
+    REG_C0_SLEWING_SINGLETURN,
+    REG_C0_TROLLEY_CIRCLE,
+    REG_C0_TROLLEY_SINGLETURN,
+    REG_C0_HOOK_CIRCLE,
+    REG_C0_HOOK_SINGLETURN,
+
+    REG_C1_STATION_ONLINE,
+    REG_C1_ENCODER_ONLINE,
+    REG_C1_UPDATE_TIMESTAMP_H,
+    REG_C1_UPDATE_TIMESTAMP_L,
+    REG_C1_SLEWING_CIRCLE,
+    REG_C1_SLEWING_SINGLETURN,
+    REG_C1_TROLLEY_CIRCLE,
+    REG_C1_TROLLEY_SINGLETURN,
+    REG_C1_HOOK_CIRCLE,
+    REG_C1_HOOK_SINGLETURN,
+
+    REG_C2_STATION_ONLINE,
+    REG_C2_ENCODER_ONLINE,
+    REG_C2_UPDATE_TIMESTAMP_H,
+    REG_C2_UPDATE_TIMESTAMP_L,
+    REG_C2_SLEWING_CIRCLE,
+    REG_C2_SLEWING_SINGLETURN,
+    REG_C2_TROLLEY_CIRCLE,
+    REG_C2_TROLLEY_SINGLETURN,
+    REG_C2_HOOK_CIRCLE,
+    REG_C2_HOOK_SINGLETURN,
+
+    REG_C3_STATION_ONLINE,
+    REG_C3_ENCODER_ONLINE,
+    REG_C3_UPDATE_TIMESTAMP_H,
+    REG_C3_UPDATE_TIMESTAMP_L,
+    REG_C3_SLEWING_CIRCLE,
+    REG_C3_SLEWING_SINGLETURN,
+    REG_C3_TROLLEY_CIRCLE,
+    REG_C3_TROLLEY_SINGLETURN,
+    REG_C3_HOOK_CIRCLE,
+    REG_C3_HOOK_SINGLETURN,
+    
+    REG_INFO_INPUT_SIZE
+};
+
+static const mb_reg_t input_reg_info[REG_INFO_INPUT_SIZE] = {
+    {REG_SYSTEM_VERSION,         REG_TYPE_INPUT_REGISTER, 0, 0}, 
+    {REG_SYSTIME_SOURCE,         REG_TYPE_INPUT_REGISTER, 5, 0}, 
+    {REG_NTP_UPDATE_TIMESTAMP_H, REG_TYPE_INPUT_REGISTER, 6, 0}, 
+    {REG_NTP_UPDATE_TIMESTAMP_L, REG_TYPE_INPUT_REGISTER, 7, 0}, 
+    {REG_GROUP_STATION_NUM,      REG_TYPE_INPUT_REGISTER, 8, 0}, 
+    {REG_GROUP_STATION_ONLINE,   REG_TYPE_INPUT_REGISTER, 9, 0},    
+    {REG_C0_STATION_ONLINE,      REG_TYPE_INPUT_REGISTER, 10, 0}, // C0 is local crane
+    {REG_C0_ENCODER_ONLINE,      REG_TYPE_INPUT_REGISTER, 11, 0},
+    {REG_C0_UPDATE_TIMESTAMP_H,  REG_TYPE_INPUT_REGISTER, 12, 0},
+    {REG_C0_UPDATE_TIMESTAMP_L,  REG_TYPE_INPUT_REGISTER, 13, 0},
+    {REG_C0_SLEWING_CIRCLE,      REG_TYPE_INPUT_REGISTER, 14, 0},
+    {REG_C0_SLEWING_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 15, 0},
+    {REG_C0_TROLLEY_CIRCLE,      REG_TYPE_INPUT_REGISTER, 16, 0},
+    {REG_C0_TROLLEY_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 17, 0},
+    {REG_C0_HOOK_CIRCLE,         REG_TYPE_INPUT_REGISTER, 18, 0},
+    {REG_C0_HOOK_SINGLETURN,     REG_TYPE_INPUT_REGISTER, 19, 0},
+    {REG_C1_STATION_ONLINE,      REG_TYPE_INPUT_REGISTER, 20, 0}, // c1 is crane slave 1
+    {REG_C1_ENCODER_ONLINE,      REG_TYPE_INPUT_REGISTER, 21, 0},
+    {REG_C1_UPDATE_TIMESTAMP_H,  REG_TYPE_INPUT_REGISTER, 22, 0},
+    {REG_C1_UPDATE_TIMESTAMP_L,  REG_TYPE_INPUT_REGISTER, 23, 0},
+    {REG_C1_SLEWING_CIRCLE,      REG_TYPE_INPUT_REGISTER, 24, 0},
+    {REG_C1_SLEWING_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 25, 0},
+    {REG_C1_TROLLEY_CIRCLE,      REG_TYPE_INPUT_REGISTER, 26, 0},
+    {REG_C1_TROLLEY_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 27, 0},
+    {REG_C1_HOOK_CIRCLE,         REG_TYPE_INPUT_REGISTER, 28, 0},
+    {REG_C1_HOOK_SINGLETURN,     REG_TYPE_INPUT_REGISTER, 29, 0},
+    {REG_C2_STATION_ONLINE,      REG_TYPE_INPUT_REGISTER, 30, 0},
+    {REG_C2_ENCODER_ONLINE,      REG_TYPE_INPUT_REGISTER, 31, 0},
+    {REG_C2_UPDATE_TIMESTAMP_H,  REG_TYPE_INPUT_REGISTER, 32, 0},
+    {REG_C2_UPDATE_TIMESTAMP_L,  REG_TYPE_INPUT_REGISTER, 33, 0},
+    {REG_C2_SLEWING_CIRCLE,      REG_TYPE_INPUT_REGISTER, 34, 0},
+    {REG_C2_SLEWING_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 35, 0},
+    {REG_C2_TROLLEY_CIRCLE,      REG_TYPE_INPUT_REGISTER, 36, 0},
+    {REG_C2_TROLLEY_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 37, 0},
+    {REG_C2_HOOK_CIRCLE,         REG_TYPE_INPUT_REGISTER, 38, 0},
+    {REG_C2_HOOK_SINGLETURN,     REG_TYPE_INPUT_REGISTER, 39, 0},
+    {REG_C3_STATION_ONLINE,      REG_TYPE_INPUT_REGISTER, 40, 0},
+    {REG_C3_ENCODER_ONLINE,      REG_TYPE_INPUT_REGISTER, 41, 0},
+    {REG_C3_UPDATE_TIMESTAMP_H,  REG_TYPE_INPUT_REGISTER, 42, 0},
+    {REG_C3_UPDATE_TIMESTAMP_L,  REG_TYPE_INPUT_REGISTER, 43, 0},
+    {REG_C3_SLEWING_CIRCLE,      REG_TYPE_INPUT_REGISTER, 44, 0},
+    {REG_C3_SLEWING_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 45, 0},
+    {REG_C3_TROLLEY_CIRCLE,      REG_TYPE_INPUT_REGISTER, 46, 0},
+    {REG_C3_TROLLEY_SINGLETURN,  REG_TYPE_INPUT_REGISTER, 47, 0},
+    {REG_C3_HOOK_CIRCLE,         REG_TYPE_INPUT_REGISTER, 48, 0},
+    {REG_C3_HOOK_SINGLETURN,     REG_TYPE_INPUT_REGISTER, 49, 0},
+};
+
+enum {
+    REG_MAIN_DHCP = 0,
+    REG_MAIN_IP1,
+    REG_MAIN_IP2,
+    REG_MAIN_IP3,
+    REG_MAIN_IP4,
+    REG_MAIN_SN1,
+    REG_MAIN_SN2,
+    REG_MAIN_SN3,
+    REG_MAIN_SN4,
+    REG_MAIN_GW1,
+    REG_MAIN_GW2,
+    REG_MAIN_GW3,
+    REG_MAIN_GW4,
+    REG_MAIN_DNS1,
+    REG_MAIN_DNS2,
+    REG_MAIN_DNS3,
+    REG_MAIN_DNS4,
+    REG_LOG_SERVER1,
+    REG_LOG_SERVER2,
+    REG_LOG_SERVER3,
+    REG_LOG_SERVER4,
+    REG_INFO_HOLDING_SIZE
+};
+
+static const mb_reg_t holding_reg_info[REG_INFO_HOLDING_SIZE] = {
+    {REG_MAIN_DHCP,  REG_TYPE_HOLDING_REGISTER, 0,   0},
+    {REG_MAIN_IP1,   REG_TYPE_HOLDING_REGISTER, 1, 192},
+    {REG_MAIN_IP2,   REG_TYPE_HOLDING_REGISTER, 2, 168},
+    {REG_MAIN_IP3,   REG_TYPE_HOLDING_REGISTER, 3,  42},
+    {REG_MAIN_IP4,   REG_TYPE_HOLDING_REGISTER, 4,  33},
+    {REG_MAIN_SN1,   REG_TYPE_HOLDING_REGISTER, 5, 255},
+    {REG_MAIN_SN2,   REG_TYPE_HOLDING_REGISTER, 6, 255},
+    {REG_MAIN_SN3,   REG_TYPE_HOLDING_REGISTER, 7, 255},
+    {REG_MAIN_SN4,   REG_TYPE_HOLDING_REGISTER, 8,   0},
+    {REG_MAIN_GW1,   REG_TYPE_HOLDING_REGISTER, 9, 192},
+    {REG_MAIN_GW2,   REG_TYPE_HOLDING_REGISTER,10, 168},
+    {REG_MAIN_GW3,   REG_TYPE_HOLDING_REGISTER,11,  42},
+    {REG_MAIN_GW4,   REG_TYPE_HOLDING_REGISTER,12,   1},
+    {REG_MAIN_DNS1,  REG_TYPE_HOLDING_REGISTER,13, 192},
+    {REG_MAIN_DNS2,  REG_TYPE_HOLDING_REGISTER,14, 168},
+    {REG_MAIN_DNS3,  REG_TYPE_HOLDING_REGISTER,15,  42},
+    {REG_MAIN_DNS4,  REG_TYPE_HOLDING_REGISTER,16,   1},
+    {REG_LOG_SERVER1,REG_TYPE_HOLDING_REGISTER,17, 192},
+    {REG_LOG_SERVER2,REG_TYPE_HOLDING_REGISTER,18, 168},
+    {REG_LOG_SERVER3,REG_TYPE_HOLDING_REGISTER,19,  42},
+    {REG_LOG_SERVER4,REG_TYPE_HOLDING_REGISTER,20,   1},
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+mb_err_t mb_init_reg(void);
+mb_err_t mb_clear_reg(int type);
+mb_err_t mb_default_reg(int type);
+
+mb_err_t mb_get_coil_reg_by_address(uint16_t address, uint8_t *value);
+mb_err_t mb_set_coil_reg_by_address(uint16_t address, uint8_t value);
 mb_err_t mb_get_holding_reg_by_address(uint16_t address, uint16_t *value);
 mb_err_t mb_set_holding_reg_by_address(uint16_t address, uint16_t value);
-
-// 输入寄存器 (Input Register) - 04功能码
 mb_err_t mb_get_input_reg_by_address(uint16_t address, uint16_t *value);
 mb_err_t mb_set_input_reg_by_address(uint16_t address, uint16_t value);
 
-// 线圈 (Coil) - 01, 05, 15功能码
-mb_err_t mb_get_coil_reg_by_address(uint16_t address, uint8_t *value);
-mb_err_t mb_set_coil_reg_by_address(uint16_t address, uint8_t value);
+/* Return unix seconds according to REG_SYSTIME_SOURCE */
+uint32_t mb_get_system_unix_time(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MODBUS_TCP_SERVER_REG_H */
+#endif
