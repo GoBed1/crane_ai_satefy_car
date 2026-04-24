@@ -5,9 +5,6 @@
 #include <stddef.h>
 #include "stdbool.h"
 
-#define APP_HOLDING_SIZE 50
-#define APP_INPUT_SIZE   50
-#define APP_COIL_SIZE    20
 
 
 
@@ -44,9 +41,7 @@ extern mb_api_config_t mb_config;
 
 extern bool enable_flash_save_cb;
 
-extern uint16_t holding_regs_database[APP_HOLDING_SIZE];
-extern uint8_t  coil_regs_database[APP_COIL_SIZE];
-extern uint16_t input_regs_database[APP_INPUT_SIZE];
+
 /* ================== API 接口 ================== */
 mb_err_t mb_api_init(const mb_api_config_t *config);
 

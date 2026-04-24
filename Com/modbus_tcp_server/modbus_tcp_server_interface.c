@@ -2,36 +2,7 @@
 #include "cmsis_os.h"
 
 #define MODBUS_MUTEX_TIMEOUT 100
- bool enable_flash_save_cb = false;
-
- // 1. 实例化这三个数组，注意前两个不能加 static，因为文件系统要强行访问它们
-uint16_t holding_regs_database[APP_HOLDING_SIZE] = {0};
-uint8_t  coil_regs_database[APP_COIL_SIZE] = {0};
- uint16_t input_regs_database[APP_INPUT_SIZE] = {0}; // 输入寄存器不需要存Flash，可保留static
-
-
-// 2. Flash 保存回调函数
-static void app_flash_save_cb(void) {
-    if (!enable_flash_save_cb) return;
-
-    // 严格调用无参版本，它内部会自动去抓上面的 holding_regs_database 和 coil_regs_database
-    fs_save_modbus_reg();
-}
-
-    // 准备配置丢给核心层的配置结构体
-    mb_api_config_t mb_config = {
-        .holding_regs  = APP_HOLDING_SIZE > 0 ? holding_regs_database : NULL,
-        .holding_len   = APP_HOLDING_SIZE,
-        
-        .input_regs    = APP_INPUT_SIZE > 0 ? input_regs_database : NULL,
-        .input_len     = APP_INPUT_SIZE,
-        
-        .coil_regs     = APP_COIL_SIZE > 0 ? coil_regs_database : NULL,
-        .coil_len      = APP_COIL_SIZE,
-        
-        .flash_save_cb = app_flash_save_cb
-    };
-
+ 
 uint8_t mb_tcp_init_flag = 0;
 static osMutexId_t mb_tcp_mutex_id = NULL;
 static mb_api_config_t mb_ctx = {0};
