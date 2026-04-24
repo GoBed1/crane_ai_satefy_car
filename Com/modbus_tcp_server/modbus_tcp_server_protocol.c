@@ -1,8 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "modbus_tcp_server_protocol.h"
-#include "modbus_tcp_server_reg.h"
-
+#include "modbus_tcp_server_database.h"
 static int mbtcp_read_coil_reg_cb(uint8_t *req, uint8_t *res);
 static int mbtcp_write_coil_reg_cb(uint8_t *req, uint8_t *res);
 static int mbtcp_write_coil_regs_cb(uint8_t *req, uint8_t *res);

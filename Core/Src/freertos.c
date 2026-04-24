@@ -28,7 +28,10 @@
 #include "lwip/apps/lwiperf.h"
 #include "lwip/netif.h"
 #include "modbus_tcp_server_task.h"
-#include "modbus_tcp_server_reg.h"
+#include "modbus_tcp_server_database.h"
+
+#include "usart.h"
+#include "printf_redirect.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -120,6 +123,8 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
+  specify_redirect_uart(&huart1);
+    printf("\r\n[INFO] [BOARD] specify redirect printf to huart2\r\n");
    extern struct netif gnetif;
   while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
   {

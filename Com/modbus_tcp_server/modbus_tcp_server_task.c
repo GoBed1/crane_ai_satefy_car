@@ -23,8 +23,7 @@
 #include "lwip/inet.h"
 #include "lwip/errno.h"
 #include "lwip/tcp.h"
-
-#include "modbus_tcp_server_reg.h"
+#include "modbus_tcp_server_database.h"
 #include "modbus_tcp_server_protocol.h" 
 
 //#include "lfs.h"
@@ -274,7 +273,7 @@ exit_task:
 
 void modbus_tcp_init_server(void)
 {
-
+// fs_mount_medium();
   mb_init_reg();
   
   modbus_tcp_server_handle = osThreadNew(lan8742a_modbus_tcp_server_task, NULL, &modbus_tcp_server_attributes);
