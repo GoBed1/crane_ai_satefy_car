@@ -14,3 +14,4 @@ Release/
 
 # 忽略一些特定的 IDE 配置文件 (可选，根据需要)
 *.launch
+.settings/

@@ -123,8 +123,9 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  specify_redirect_uart(&huart1);
-    printf("\r\n[INFO] [BOARD] specify redirect printf to huart2\r\n");
+  // HAL_GPIO_TogglePin(HEART_LED_GPIO_Port, HEART_LED_Pin);
+  specify_redirect_uart(&huart5);
+    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
    extern struct netif gnetif;
   while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
   {
@@ -135,9 +136,9 @@ void StartDefaultTask(void *argument)
   uint16_t count = 0;
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
-    count=count % 100;
-    mb_set_holding_reg_by_address(1, count++);
+    HAL_GPIO_TogglePin(HEART_LED_GPIO_Port, HEART_LED_Pin);
+    // count=count % 100;
+    // mb_set_holding_reg_by_address(1, count++);
     osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
