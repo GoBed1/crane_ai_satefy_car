@@ -59,8 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ETH_RST_Pin GPIO_PIN_0
 #define ETH_RST_GPIO_Port GPIOC
-#define LED0_Pin GPIO_PIN_9
-#define LED0_GPIO_Port GPIOE
+#define HEART_LED_Pin GPIO_PIN_10
+#define HEART_LED_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
