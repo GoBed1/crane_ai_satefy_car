@@ -13,4 +13,11 @@ modbus_t bms_read_telegrams[READ_MSG_COUNT] = {
 modbusHandler_t bms_mppt_master;       // BMS Modbus 主机句柄
 uint16_t modbus_master_buf[128] = {0}; // Modbus 主机共用缓冲区
 
-
+// 放电时间全局变量
+uint16_t discharge_samples[BMS_SAMPLE_BUFFER_SIZE];
+uint8_t discharge_idx = 0;
+uint8_t discharge_count = 0;
+// 充电时间全局变量
+uint16_t charge_samples[BMS_SAMPLE_BUFFER_SIZE];
+uint8_t charge_idx = 0;
+uint8_t charge_count = 0;

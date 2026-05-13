@@ -121,24 +121,11 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
-  MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  // HAL_GPIO_TogglePin(HEART_LED_GPIO_Port, HEART_LED_Pin);
-  
-   extern struct netif gnetif;
-  while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
-  {
-    osDelay(100);
-  }
-  modbus_tcp_init_server();
   /* Infinite loop */
-  uint16_t count = 0;
   for(;;)
   {
-    HAL_GPIO_TogglePin(HEART_LED_GPIO_Port, HEART_LED_Pin);
-    // count=count % 100;
-    // mb_set_holding_reg_by_address(1, count++);
-    osDelay(1000);
+    osDelay(10);
   }
   /* USER CODE END StartDefaultTask */
 }

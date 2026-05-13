@@ -17,6 +17,7 @@
 #include "queue.h"
 #include "timers.h" 
 #include "event_groups.h"
+#include "sys_def.h"
 //RFID相关参数定义
 #define RFID_MAX_TAGS      8
 #define RFID_OFFLINE_MS    10000U
