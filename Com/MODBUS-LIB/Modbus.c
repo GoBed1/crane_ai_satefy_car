@@ -37,7 +37,9 @@
 
 #define lowByte(w) ((w) & 0xff)
 #define highByte(w) ((w) >> 8)
-
+#define LOGD(...) printf("[DEBUG] " __VA_ARGS__)
+#define LOGI(...) printf("[INFO]  " __VA_ARGS__)
+#define LOGE(...) printf("[ERROR] " __VA_ARGS__)
 
 modbusHandler_t *mHandlers[MAX_M_HANDLERS];
 

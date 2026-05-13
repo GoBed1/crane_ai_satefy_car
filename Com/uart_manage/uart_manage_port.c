@@ -14,7 +14,6 @@
 /* port.c */
 #include "uart_manage.h"
 #include "Modbus.h"
-extern RFIDClient RFID_client;
 extern EventGroupHandle_t eg; // 初始化事件组为NULL
 
 /* DMA buffer placement */
