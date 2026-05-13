@@ -124,8 +124,7 @@ void StartDefaultTask(void *argument)
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   // HAL_GPIO_TogglePin(HEART_LED_GPIO_Port, HEART_LED_Pin);
-  specify_redirect_uart(&huart5);
-    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
+  
    extern struct netif gnetif;
   while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
   {
