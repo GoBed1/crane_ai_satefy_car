@@ -21,22 +21,9 @@ const osThreadAttr_t bms_read_attributes = {
     .priority = (osPriority_t)osPriorityNormal,
 };
 
-void init_modtcp_server(void);
-void init_modtcp_server(void)
-{
-    MX_LWIP_Init();
-    extern struct netif gnetif;
-    while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
-    {
-        osDelay(100);
-    }
-    modbus_tcp_init_server();
-}
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
 {
-    // 初始化modbus tcp server模块
-    init_modtcp_server();
     for (;;)
     {
         // 心跳LED闪烁

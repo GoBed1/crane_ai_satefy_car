@@ -121,7 +121,16 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
+    MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
+  
+  extern struct netif gnetif;
+    while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
+    {
+        osDelay(100);
+    }
+    // 初始化modbus tcp server模块
+    modbus_tcp_init_server();
   /* Infinite loop */
   for(;;)
   {
