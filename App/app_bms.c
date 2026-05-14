@@ -41,7 +41,7 @@ void process_bms_logic(void)
 {
     static TickType_t last_500ms = 0;
     static TickType_t last_7s = 0;
-    static TickType_t last_10s = 0;
+    static TickType_t last_11s = 0;
     if (xTaskGetTickCount() - last_500ms >= pdMS_TO_TICKS(500))
     {
         last_500ms += pdMS_TO_TICKS(500);
@@ -86,9 +86,9 @@ void process_bms_logic(void)
     }
 
     // 每 10s 执行一次
-    if (xTaskGetTickCount() - last_10s >= pdMS_TO_TICKS(10000))
+    if (xTaskGetTickCount() - last_11s >= pdMS_TO_TICKS(11000))
     {
-        last_10s += pdMS_TO_TICKS(10000);
+        last_11s += pdMS_TO_TICKS(11000);
         // 读取电池电量信息
         ModbusQuery(&bms_mppt_master, bms_read_telegrams[READ_BATT_LEVEL]);
         int err = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(MODBUS_WAIT_TIMEOUT_MS));

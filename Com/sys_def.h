@@ -29,6 +29,33 @@
 // 充电/放电时间采样缓存数组大小
 #define BMS_SAMPLE_BUFFER_SIZE 30              // 充电/放电时间，采样缓存数组大小
 #define BMS_SAMPLE_VALID_COUNT    20      // 实际计算平均值的采样数
+/* ========================================================================= */
+/* MPPT 通信宏定义                                                         */
+/* ========================================================================= */
+#define SLAVE_MPPT_ID 1 // MPPT 从机默认ID
+// MPPT 寄存器地址定义 (读功能码04)
+#define REG_MPPT_PV_VOLTAGE    0x3100  // 阵列电压
+#define REG_MPPT_PV_CURRENT    0x3101  // 阵列电流
+#define REG_MPPT_LOAD_VOLTAGE  0x310C  // 负载电压
+#define REG_MPPT_LOAD_CURRENT  0x310D  // 负载电流
+//mppt存放在输入寄存器中的地址定义（上报）
+#define INPUT_REG_MPPT_PV_VOLTAGE    22 // [上报] MPPT阵列电压
+#define INPUT_REG_MPPT_PV_CURRENT    23 // [上报] MPPT阵列电流
+#define INPUT_REG_MPPT_LOAD_VOLTAGE  24   // [上报] MPPT负载电压
+#define INPUT_REG_MPPT_LOAD_CURRENT  25   // [上报] MPPT负载电流
+
+
+/* ====================相关结构体定义===================================================== */
+// MPPT 读取消息索引
+typedef enum
+{
+    READ_MPPT_PV_VOLTAGE = 0,
+    READ_MPPT_PV_CURRENT,
+    READ_MPPT_LOAD_VOLTAGE,
+    READ_MPPT_LOAD_CURRENT,
+    READ_MPPT_MSG_COUNT
+} MpptReadMsgIdx_t;
+
 
 typedef enum
 {
@@ -58,5 +85,10 @@ extern uint8_t discharge_count;
 extern uint16_t charge_samples[BMS_SAMPLE_BUFFER_SIZE];
 extern uint8_t charge_idx;
 extern uint8_t charge_count;
+
+// 外部引用的数据和报文数组
+extern uint16_t mppt_read_results[READ_MPPT_MSG_COUNT];
+extern modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT];
+
 
 #endif // SYS_DEF_H

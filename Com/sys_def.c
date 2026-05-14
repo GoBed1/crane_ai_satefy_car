@@ -21,3 +21,16 @@ uint8_t discharge_count = 0;
 uint16_t charge_samples[BMS_SAMPLE_BUFFER_SIZE];
 uint8_t charge_idx = 0;
 uint8_t charge_count = 0;
+
+
+// MPPT 读取结果存储
+uint16_t mppt_read_results[READ_MPPT_MSG_COUNT] = {0};
+
+// MPPT 读取报文配置 (使用功能码 04 读输入寄存器)
+modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT] = {
+    [READ_MPPT_PV_VOLTAGE]   = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_PV_VOLTAGE,   .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_PV_VOLTAGE]},
+    [READ_MPPT_PV_CURRENT]   = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_PV_CURRENT,   .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_PV_CURRENT]},
+    [READ_MPPT_LOAD_VOLTAGE] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_LOAD_VOLTAGE, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_LOAD_VOLTAGE]},
+    [READ_MPPT_LOAD_CURRENT] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_LOAD_CURRENT, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_LOAD_CURRENT]}
+};
+
