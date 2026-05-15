@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define POWER_5V_GPIO_Port GPIOC
 #define ETH_RST_Pin GPIO_PIN_0
 #define ETH_RST_GPIO_Port GPIOC
+#define GPS_EN_Pin GPIO_PIN_14
+#define GPS_EN_GPIO_Port GPIOB
 #define HEART_LED_Pin GPIO_PIN_10
 #define HEART_LED_GPIO_Port GPIOD
 
