@@ -52,7 +52,7 @@ void init_app_car_task(void)
 {
     specify_redirect_uart(&huart5);
     printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
-
+// HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
     // 初始化modbus主机模块 (BMS、mppt等)
     init_modbus_master();
     // 呼吸道任务线程
