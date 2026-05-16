@@ -23,6 +23,7 @@
 #include "lwip.h"
 #include "quadspi.h"
 #include "rtc.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -116,6 +117,7 @@ int main(void)
   MX_UART5_Init();
   MX_UART7_Init();
   MX_UART8_Init();
+  MX_SPI4_Init();
   /* USER CODE BEGIN 2 */
   init_app_car_task(); // 初始化应用层任务模块
 

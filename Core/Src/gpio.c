@@ -50,7 +50,7 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(POWER_3V_GPIO_Port, POWER_3V_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, POWER_3V_Pin|LORA1_NSS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_SET);
@@ -59,7 +59,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(HEART_LED_GPIO_Port, HEART_LED_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOD, HEART_LED_Pin|LORA1_RESET_Pin|LORA1_RF_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : POWER_3V_Pin */
   GPIO_InitStruct.Pin = POWER_3V_Pin;
@@ -75,12 +75,42 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : LORA1_NSS_Pin */
+  GPIO_InitStruct.Pin = LORA1_NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(LORA1_NSS_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : HEART_LED_Pin */
   GPIO_InitStruct.Pin = HEART_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(HEART_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LORA1_DIO1_Pin */
+  GPIO_InitStruct.Pin = LORA1_DIO1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(LORA1_DIO1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LORA1_RESET_Pin LORA1_RF_EN_Pin */
+  GPIO_InitStruct.Pin = LORA1_RESET_Pin|LORA1_RF_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LORA1_BUSY_Pin */
+  GPIO_InitStruct.Pin = LORA1_BUSY_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(LORA1_BUSY_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 
 }
 

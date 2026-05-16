@@ -63,8 +63,19 @@ void Error_Handler(void);
 #define POWER_5V_GPIO_Port GPIOC
 #define ETH_RST_Pin GPIO_PIN_0
 #define ETH_RST_GPIO_Port GPIOC
+#define LORA1_NSS_Pin GPIO_PIN_15
+#define LORA1_NSS_GPIO_Port GPIOE
 #define HEART_LED_Pin GPIO_PIN_10
 #define HEART_LED_GPIO_Port GPIOD
+#define LORA1_DIO1_Pin GPIO_PIN_3
+#define LORA1_DIO1_GPIO_Port GPIOD
+#define LORA1_DIO1_EXTI_IRQn EXTI3_IRQn
+#define LORA1_RESET_Pin GPIO_PIN_4
+#define LORA1_RESET_GPIO_Port GPIOD
+#define LORA1_RF_EN_Pin GPIO_PIN_7
+#define LORA1_RF_EN_GPIO_Port GPIOD
+#define LORA1_BUSY_Pin GPIO_PIN_7
+#define LORA1_BUSY_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
