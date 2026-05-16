@@ -5,6 +5,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
+#include <stdio.h>
+static DioIrqHandler *dio1IrqCallback = NULL;
 // 声明外部定义的 SPI4 句柄 (确保你的 main.c 或 spi.c 中有这个变量)
 extern SPI_HandleTypeDef hspi4;
 
@@ -66,11 +68,11 @@ void SX126xWaitOnBusy( void )
     {
         // 考虑到你后续在 FreeRTOS 任务中调用，这里最好用 osDelay(1)
         // 但如果是在进入内核调度前测试，可以用底层的 HAL_Delay(1)
-        osDelay( 1 ); 
+        // osDelay( 1 ); 
         timeout++;
         
-        // 防呆设计：如果等了超过 500ms 芯片还是忙，说明硬件或引脚配置有问题，强制跳出，防止 RTOS 死锁
-        if( timeout > 500 ) 
+        // 防呆设计：如果等了超过 1000ms 芯片还是忙，说明硬件或引脚配置有问题，强制跳出，防止 RTOS 死锁
+        if( timeout > 5000000 ) 
         {
             // 如果你的串口开了，可以加个打印提示
              printf("[LoRa ERROR] BUSY Timeout! Check Hardware!\r\n");
@@ -82,7 +84,37 @@ void SX126xWaitOnBusy( void )
 //=============================================================================
 // 5. 毫秒延时函数桥接
 //=============================================================================
-// void SX126xDelayMs( uint32_t ms ) 
-// {
-//     HAL_Delay( ms ); // 直接映射到系统的毫秒延时
-// }
+void SX126xDelayMs( uint32_t ms ) 
+{
+    osDelay( ms ); // 直接映射到系统的毫秒延时
+}
+//=============================================================================
+// 6. 补充 Semtech 驱动库需要的底层“桩函数”(Stubs)
+//=============================================================================
+
+// IO 与中断初始化 (我们在 CubeMX 和 HAL_GPIO_EXTI_Callback 中已实现，故留空)
+void SX126xIoInit( void ) {}
+void SX126xIoIrqInit( DioIrqHandler dioIrq ) {
+    dio1IrqCallback = dioIrq; // 保存官方库传进来的中断回调指针
+}
+void SX126x_DIO1_Interrupt_Handle(void) {
+    if (dio1IrqCallback != NULL) {
+        dio1IrqCallback(NULL); // 调用它，官方库就会把 IrqFired 设为 true!
+    }
+}
+void SX126xIoDeInit( void ) {}
+void SX126xIoDbgInit( void ) {}
+
+// 定时器操作 (由于 FreeRTOS 机制取代了死等轮询，这里的硬件定时器留空即可)
+void SX126xTimerInit(void) {}
+void SX126xSetTxTimerValue(uint32_t nMs) {}
+void SX126xTxTimerStart(void) {}
+void SX126xTxTimerStop(void) {}
+void SX126xSetRxTimerValue(uint32_t nMs) {}
+void SX126xRxTimerStart(void) {}
+void SX126xRxTimerStop(void) {}
+
+// 如果之前没有加延时函数，把这个也带上：
+void delay_ms(uint32_t ms) {
+    HAL_Delay(ms); // 如果在 RTOS 里想出让 CPU，可以换成 osDelay(ms);
+}

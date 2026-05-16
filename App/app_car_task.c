@@ -8,7 +8,29 @@
 #include "app_mppt.h"
 
 #include "sx126x-board.h" 
+#include "radio.h"
+#include <string.h>
+extern void SX126x_DIO1_Interrupt_Handle(void);
+// 1. 定义事件回调函数
+static void OnTxDone(void) {
+    printf("[LoRa Event] DIO1 Triggered: Tx Done!\r\n");
+    Radio.Standby(); // 发送完进入待机
+}
+static void OnTxTimeout(void) {
+    printf("[LoRa Event] Tx Timeout!\r\n");
+}
+static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {}
+static void OnRxTimeout(void) {}
+static void OnRxError(void) {}
 
+// 将回调函数打包
+static RadioEvents_t LoRaEvents = {
+    .TxDone = OnTxDone,
+    .RxDone = OnRxDone,
+    .TxTimeout = OnTxTimeout,
+    .RxTimeout = OnRxTimeout,
+    .RxError = OnRxError
+};
 void Test_LoRa_SPI(void) 
 {
     printf("\r\n--- LoRa SPI HAL Test Start ---\r\n");
@@ -40,6 +62,25 @@ void Test_LoRa_SPI(void)
     printf("--- LoRa SPI HAL Test End ---\r\n\r\n");
 }
 
+// 声明将在下一步创建的 LoRa 任务句柄
+extern osThreadId_t lora_task_handle;
+
+// HAL库的外部中断回调函数
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    // 假设你的 DIO1 接在 PD3
+    if (GPIO_Pin == GPIO_PIN_3) 
+    {
+        printf("[Debug] DIO1 EXTI IRQ Triggered!!\r\n");
+        SX126x_DIO1_Interrupt_Handle();
+        // 给 LoRa 任务发送一个信号 (0x01)，唤醒它去处理中断
+        if (lora_task_handle != NULL) {
+            osThreadFlagsSet(lora_task_handle, 0x01);
+        }
+    }
+}
+
+
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -54,6 +95,53 @@ const osThreadAttr_t bms_read_attributes = {
     .stack_size = 1024 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
+
+// 2. 任务句柄与属性
+osThreadId_t lora_task_handle;
+const osThreadAttr_t lora_task_attributes = {
+    .name = "LoRaTask",
+    .stack_size = 1024 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
+// 3. LoRa 主线程
+void lora_thread(void *argument)
+{
+    printf("\r\n[LoRa Task] Initializing Radio State Machine...\r\n");
+
+    // 初始化 Radio 底层
+    Radio.Init(&LoRaEvents);
+
+    // 设置射频参数
+    Radio.SetChannel(868000000); // 868 MHz (根据你的天线确认)
+    // 配置发送参数：注意功率传 2 (不超过3dBm，防烧毁 FEM)
+    Radio.SetTxConfig(MODEM_LORA, 2, 0, 0, 7, 1, 8, false, true, 0, 0, false, 3000);
+
+    printf("[LoRa Task] Radio Init Complete. Starting TX loop...\r\n");
+
+    char send_buf[] = "Hello from STM32H7!";
+
+    for (;;)
+    {
+        // 1. 触发发送指令
+        printf("\r\n[LoRa Task] Sending Packet: %s\r\n", send_buf);
+        Radio.Send((uint8_t *)send_buf, strlen(send_buf));
+
+        // 2. 阻塞等待 DIO1 外部中断发来的通知 (无限等待 osWaitForever)
+        // 这个机制完美替代了死循环轮询，0 CPU 占用！
+        uint32_t flags = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
+        
+        if (flags == 0x01) {
+            // 收到中断信号，调用官方底层去处理 IRQ 标志
+            // 这句话执行后，会自动跳转到上面的 OnTxDone() 函数
+            printf("\r\n[LoRa Task] Received DIO1 Interrupt. Processing...\r\n");
+            Radio.IrqProcess(); 
+        }
+
+        // 等待 3 秒再发下一次
+        osDelay(3000); 
+    }
+}
 
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
@@ -74,9 +162,9 @@ void bms_read_thread(void *argument)
     for (;;)
     {
         // 处理 BMS 逻辑
-        process_bms_logic();
-        // 处理 MPPT 逻辑
-        process_mppt_logic();
+        // process_bms_logic();
+        // // 处理 MPPT 逻辑
+        // process_mppt_logic();
         osDelay(100);
     }
 }
@@ -95,4 +183,6 @@ void init_app_car_task(void)
     heart_led_handle = osThreadNew(heart_beat_thread, NULL, &heart_led_attributes);
     // modbus读取线程
     bms_read_handle = osThreadNew(bms_read_thread, NULL, &bms_read_attributes);
+    // LoRa主线程
+    lora_task_handle = osThreadNew(lora_thread, NULL, &lora_task_attributes);
 }
