@@ -16,10 +16,23 @@ static void OnTxDone(void) {
     printf("[LoRa Event] DIO1 Triggered: Tx Done!\r\n");
     Radio.Standby(); // 发送完进入待机
 }
+
 static void OnTxTimeout(void) {
     printf("[LoRa Event] Tx Timeout!\r\n");
 }
-static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {}
+// static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {}
+static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
+    // 把收到的字节数组变成字符串打印出来
+    char rx_str[256];
+    memset(rx_str, 0, sizeof(rx_str));
+    memcpy(rx_str, payload, size);
+    
+    printf("\r\n=======================================\r\n");
+    printf("[LoRa Event] Rx Done!\r\n");
+    printf("[LoRa Event] Payload: %s\r\n", rx_str);
+    printf("[LoRa Event] RSSI: %d dBm, SNR: %d dB\r\n", rssi, snr);
+    printf("=======================================\r\n");
+}
 static void OnRxTimeout(void) {}
 static void OnRxError(void) {}
 
@@ -31,6 +44,7 @@ static RadioEvents_t LoRaEvents = {
     .RxTimeout = OnRxTimeout,
     .RxError = OnRxError
 };
+
 void Test_LoRa_SPI(void) 
 {
     printf("\r\n--- LoRa SPI HAL Test Start ---\r\n");
@@ -107,39 +121,27 @@ const osThreadAttr_t lora_task_attributes = {
 // 3. LoRa 主线程
 void lora_thread(void *argument)
 {
-    printf("\r\n[LoRa Task] Initializing Radio State Machine...\r\n");
+    printf("\r\n[LoRa Task] Initializing Radio State Machine (RX Mode)...\r\n");
 
-    // 初始化 Radio 底层
     Radio.Init(&LoRaEvents);
+    Radio.SetChannel(868000000); // 必须和发送端频率一模一样！
 
-    // 设置射频参数
-    Radio.SetChannel(868000000); // 868 MHz (根据你的天线确认)
-    // 配置发送参数：注意功率传 2 (不超过3dBm，防烧毁 FEM)
-    Radio.SetTxConfig(MODEM_LORA, 2, 0, 0, 7, 1, 8, false, true, 0, 0, false, 3000);
+    // 配置为接收模式 (参数必须和 TX 端完全对应: BW=125kHz, SF=7, CR=4/5)
+    Radio.SetRxConfig(MODEM_LORA, 0, 7, 1, 0, 8, 0, false, 0, true, false, 0, false, true);
 
-    printf("[LoRa Task] Radio Init Complete. Starting TX loop...\r\n");
-
-    char send_buf[] = "Hello from STM32H7!";
+    printf("[LoRa Task] Radio Init Complete. Entering Continuous RX mode...\r\n");
+    
+    // 启动连续接收模式，0 代表不超时
+    Radio.Rx(0); 
 
     for (;;)
     {
-        // 1. 触发发送指令
-        printf("\r\n[LoRa Task] Sending Packet: %s\r\n", send_buf);
-        Radio.Send((uint8_t *)send_buf, strlen(send_buf));
-
-        // 2. 阻塞等待 DIO1 外部中断发来的通知 (无限等待 osWaitForever)
-        // 这个机制完美替代了死循环轮询，0 CPU 占用！
+        // 依然是死等 DIO1 中断
         uint32_t flags = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
         
         if (flags == 0x01) {
-            // 收到中断信号，调用官方底层去处理 IRQ 标志
-            // 这句话执行后，会自动跳转到上面的 OnTxDone() 函数
-            printf("\r\n[LoRa Task] Received DIO1 Interrupt. Processing...\r\n");
             Radio.IrqProcess(); 
         }
-
-        // 等待 3 秒再发下一次
-        osDelay(3000); 
     }
 }
 
