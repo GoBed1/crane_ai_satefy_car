@@ -27,13 +27,6 @@ extern EventGroupHandle_t eg; // 初始化事件组为NULL
 #define LOGI(...) printf(__VA_ARGS__)
 #define LOGE(...) printf(__VA_ARGS__)
 
-extern UART_HandleTypeDef huart1;
-extern DMA_HandleTypeDef hdma_usart1_rx;
-static uint8_t uart1_recv_buff[256U] DMA_BUFFER;
-static uint8_t uart1_send_buff[256U] DMA_BUFFER;
-static uint8_t uart1_send_fifo_buff[256U] DMA_BUFFER;
-static uint8_t uart1_process_buff[256U * 4U] DMA_BUFFER;
-
 extern UART_HandleTypeDef huart5;
 extern DMA_HandleTypeDef hdma_uart5_rx;
 static uint8_t uart5_recv_buff[256U] DMA_BUFFER;
@@ -41,29 +34,69 @@ static uint8_t uart5_send_buff[256U] DMA_BUFFER;
 static uint8_t uart5_send_fifo_buff[256U] DMA_BUFFER;
 static uint8_t uart5_process_buff[256U * 4U] DMA_BUFFER;
 
+extern UART_HandleTypeDef huart1;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+static uint8_t uart1_recv_buff[512U] DMA_BUFFER;
+static uint8_t uart1_send_buff[512U] DMA_BUFFER;
+static uint8_t uart1_send_fifo_buff[512U] DMA_BUFFER;
+static uint8_t uart1_process_buff[512U * 4U] DMA_BUFFER;
+
 static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 {
   (void)uart_manage_dma_send_by_name("echo", buf, len);
   return 0U;
 }
+// 【Shell (UART5) 收到数据 -> 转发给 4G (UART1)】
+static uint32_t shell_recv_callback(uint8_t *buf, uint16_t len)
+{
+  printf("\r\n[DEBUG] Shell recv %d : %.*s\r\n", len, len, buf);
+  // 转发给名为 "4g" 的接口
+  (void)uart_manage_dma_send_by_name("4g", buf, len);
+  return 0U;
+}
+// 【4G (UART1) 收到数据 -> 转发回 Shell (UART5)】
+static uint32_t uart_4g_recv_callback(uint8_t *buf, uint16_t len)
+{
+  printf("\r\n[DEBUG] 4G  recv %d : %.*s\r\n", len, len, buf);
+  // 转发给名为 "shell" 的接口
+  (void)uart_manage_dma_send_by_name("shell", buf, len);
+  return 0U;
+}
 
 const uart_inferface_t uart_manage_table[] = {
   {
-    .name = "echo",
-    .uart_h = &huart1,
+    .name = "4g",                           
+    .uart_h = &huart1,                      
     .dma_h = &hdma_usart1_rx,
     .recv_buffer = uart1_recv_buff,
     .recv_buffer_size = sizeof(uart1_recv_buff),
     .process_buffer = uart1_process_buff,
     .process_buffer_size = sizeof(uart1_process_buff),
-    .recv_callback = echo_callback,// callback_direct_mode
+    .recv_callback = uart_4g_recv_callback, 
     .send_buffer = uart1_send_buff,
     .send_buffer_size = sizeof(uart1_send_buff),
     .send_fifo_buffer = uart1_send_fifo_buff,
     .send_fifo_size = sizeof(uart1_send_fifo_buff),
     .send_callback = NULL,
   },
+  {
+    .name = "shell",                     
+    .uart_h = &huart5,                   
+    .dma_h = &hdma_uart5_rx,
+    .recv_buffer = uart5_recv_buff,
+    .recv_buffer_size = sizeof(uart5_recv_buff),
+    .process_buffer = uart5_process_buff,
+    .process_buffer_size = sizeof(uart5_process_buff),
+    .recv_callback = shell_recv_callback,   
+    .send_buffer = uart5_send_buff,
+    .send_buffer_size = sizeof(uart5_send_buff),
+    .send_fifo_buffer = uart5_send_fifo_buff,
+    .send_fifo_size = sizeof(uart5_send_fifo_buff),
+    .send_callback = NULL,
+  }
 };
+
+
 
 #define uart_manage_table_size \
   ((uint16_t)(sizeof(uart_manage_table) / sizeof(uart_manage_table[0])))

@@ -6,6 +6,7 @@
 #include "lwip/netif.h"
 #include "ethernetif.h"
 #include "app_mppt.h"
+extern void init_uart_manage(void);
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -52,7 +53,13 @@ void init_app_car_task(void)
 {
     specify_redirect_uart(&huart5);
     printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
-// HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
+    // 4g模块复位操作
+    HAL_GPIO_WritePin(RESET_4G_GPIO_Port, RESET_4G_Pin, GPIO_PIN_RESET);   // RESET_4G 引脚拉低
+    HAL_GPIO_WritePin(RELOAD_4G_GPIO_Port, RELOAD_4G_Pin, GPIO_PIN_RESET); // RELOAD 引脚拉低
+    init_uart_manage();                                                    // 初始化 UART 管理模块，设置好串口和回调函数
+    uart_manage_enable_dma_recv_by_name("shell");
+    uart_manage_enable_dma_recv_by_name("4g");
+
     // 初始化modbus主机模块 (BMS、mppt等)
     init_modbus_master();
     // 呼吸道任务线程
