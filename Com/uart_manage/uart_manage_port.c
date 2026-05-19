@@ -52,17 +52,17 @@ static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 static uint32_t shell_recv_callback(uint8_t *buf, uint16_t len)
 {
   printf("\r\n[DEBUG] Shell recv %d : %.*s\r\n", len, len, buf);
-  if (craner_at_handler(buf, len) != 0U)
-	{
-		return 0U;
-	}
+  // if (craner_at_handler(buf, len) != 0U)
+	// {
+	// 	return 0U;
+	// }
 
-	if (usr_at_handler(buf, len) != 0U)
-	{
-		return 0U;
-	}
+	// if (usr_at_handler(buf, len) != 0U)
+	// {
+	// 	return 0U;
+	// }
   // 转发给名为 "4g" 的接口
-  // (void)uart_manage_dma_send_by_name("4g", buf, len);
+  (void)uart_manage_dma_send_by_name("4g", buf, len);
   return 0U;
 }
 // 【4G (UART1) 收到数据 -> 转发回 Shell (UART5)】
