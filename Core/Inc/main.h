@@ -65,6 +65,10 @@ void Error_Handler(void);
 #define ETH_RST_GPIO_Port GPIOC
 #define HEART_LED_Pin GPIO_PIN_10
 #define HEART_LED_GPIO_Port GPIOD
+#define RESET_4G_Pin GPIO_PIN_14
+#define RESET_4G_GPIO_Port GPIOD
+#define RELOAD_4G_Pin GPIO_PIN_15
+#define RELOAD_4G_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
