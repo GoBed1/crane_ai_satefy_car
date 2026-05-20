@@ -41,6 +41,20 @@ static uint8_t uart3_send_buff[256U] DMA_BUFFER;
 static uint8_t uart3_send_fifo_buff[256U] DMA_BUFFER;
 static uint8_t uart3_process_buff[256U * 4U] DMA_BUFFER;
 
+extern UART_HandleTypeDef huart6;
+extern DMA_HandleTypeDef hdma_usart6_rx;
+static uint8_t uart6_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart6_send_buff[256U] DMA_BUFFER;
+static uint8_t uart6_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart6_process_buff[256U * 4U] DMA_BUFFER;
+
+extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+static uint8_t uart2_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart2_send_buff[256U] DMA_BUFFER;
+static uint8_t uart2_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart2_process_buff[256U * 4U] DMA_BUFFER;
+
 static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 {
   (void)uart_manage_dma_send_by_name("echo", buf, len);
@@ -62,6 +76,36 @@ const uart_inferface_t uart_manage_table[] = {
     .send_buffer_size = sizeof(uart3_send_buff),
     .send_fifo_buffer = uart3_send_fifo_buff,
     .send_fifo_size = sizeof(uart3_send_fifo_buff),
+    .send_callback = NULL,
+  },
+  {
+    .name = "laser_01",
+    .uart_h = &huart6,
+    .dma_h = &hdma_usart6_rx,
+    .recv_buffer = uart6_recv_buff,
+    .recv_buffer_size = sizeof(uart6_recv_buff),
+    .process_buffer = uart6_process_buff,
+    .process_buffer_size = sizeof(uart6_process_buff),
+    .recv_callback = NULL, 
+    .send_buffer = uart6_send_buff,
+    .send_buffer_size = sizeof(uart6_send_buff),
+    .send_fifo_buffer = uart6_send_fifo_buff,
+    .send_fifo_size = sizeof(uart6_send_fifo_buff),
+    .send_callback = NULL,
+  },
+  {
+    .name = "laser_02",
+    .uart_h = &huart2,
+    .dma_h = &hdma_usart2_rx,
+    .recv_buffer = uart2_recv_buff,
+    .recv_buffer_size = sizeof(uart2_recv_buff),
+    .process_buffer = uart2_process_buff,
+    .process_buffer_size = sizeof(uart2_process_buff),
+    .recv_callback = NULL, 
+    .send_buffer = uart2_send_buff,
+    .send_buffer_size = sizeof(uart2_send_buff),
+    .send_fifo_buffer = uart2_send_fifo_buff,
+    .send_fifo_size = sizeof(uart2_send_fifo_buff),
     .send_callback = NULL,
   },
 };

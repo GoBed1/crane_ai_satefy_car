@@ -5,7 +5,10 @@
 #include "cmsis_os.h"
 #include "lwip/netif.h"
 #include "ethernetif.h"
+#include "printf_redirect.h"
 #include "app_mppt.h"
+#include "app_gps.h"
+#include "app_laser.h"
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -24,6 +27,13 @@ const osThreadAttr_t bms_read_attributes = {
 osThreadId_t gps_standby_handle;
 const osThreadAttr_t gps_standby_attributes = {
     .name = "GPSStandby",
+    .stack_size = 1024 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
+};
+// laser激光测距线程
+osThreadId_t laser_handle;
+const osThreadAttr_t laser_attributes = {
+    .name = "LaserTask",
     .stack_size = 1024 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
@@ -64,19 +74,28 @@ void gps_standby_thread(void *argument)
         osDelay(1000);
     }
 }
+// 激光测距线程
+void laser_thread(void *argument)
+{
+    for (;;)
+    {
+        process_laser_logic();
+        osDelay(1000);
+    }
+}
 // 初始化应用层任务模块
 void init_app_car_task(void)
 {
     specify_redirect_uart(&huart5);
     printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
-    // HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
-    init_uart_manage();
-    // 初始化modbus主机模块 (BMS、mppt等)
-    init_modbus_master();
+    init_uart_manage();//初始化串口管理模块（gps、laser01/02）
+    init_modbus_master();// 初始化modbus主机模块 (BMS、mppt等)
     // 呼吸道任务线程
     heart_led_handle = osThreadNew(heart_beat_thread, NULL, &heart_led_attributes);
     // modbus读取线程
     bms_read_handle = osThreadNew(bms_read_thread, NULL, &bms_read_attributes);
     // gps待机线程
     gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
+    // 激光测距线程
+    laser_handle = osThreadNew(laser_thread, NULL, &laser_attributes);
 }

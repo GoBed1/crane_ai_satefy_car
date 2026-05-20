@@ -70,6 +70,13 @@
 
 #define TIMEZONE_OFFSET_BEIJING 8 // 北京时间相对于UTC的时区偏移
 
+/* ========================================================================= */
+/* 激光测距定义                                                               */
+/* ========================================================================= */
+#define INPUT_REG_LASER_01_DISTANCE 32 // [上报] 激光测距仪01距离
+#define INPUT_REG_LASER_02_DISTANCE 33 // [上报] 激光测距仪02距离
+
+
 /* ====================相关结构体定义===================================================== */
 // MPPT 读取消息索引
 typedef enum
@@ -118,4 +125,7 @@ extern modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT];
 extern uint16_t off_hhmm;    // 关机时间
 extern uint16_t on_hhmm;     // 开机时间
 extern uint8_t standby_flag; // 待机模式是否使能
+
+// 激光测距相关
+extern const uint8_t laser_single_cmd[8]; // 激光测距单次测距指令
 #endif                       // SYS_DEF_H
