@@ -31,7 +31,7 @@ void init_modbus_master(void)
     // 初始化 Modbus 主机
     init_modbus_rtu_master(
         &bms_mppt_master,
-        &huart6,
+        &huart8,
         modbus_master_buf,
         sizeof(modbus_master_buf) / sizeof(modbus_master_buf[0]));
     LOGI(" modbus master init success !\n");
