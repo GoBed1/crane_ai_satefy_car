@@ -26,6 +26,9 @@
 #define INPUT_REG_BMS_TOTAL_VOLTAGE 20         // [上报] BMS总电压
 #define INPUT_REG_BMS_TOTAL_CURRENT 21         // [上报] BMS总电流
 #define MODBUS_WAIT_TIMEOUT_MS 1000            // Modbus等待超时时间
+
+#define COIL_REG_BMS_IS_CHARGING 21 // [上报] BMS是否正在充电,0:未充电 1:正在充电
+
 // 充电/放电时间采样缓存数组大小
 #define BMS_SAMPLE_BUFFER_SIZE 30 // 充电/放电时间，采样缓存数组大小
 #define BMS_SAMPLE_VALID_COUNT 20 // 实际计算平均值的采样数
@@ -63,7 +66,8 @@
 #define HOLDING_REG_POWER_OFF_TIME 5 // 定时关机时间
 #define HOLDING_REG_RTC_TIME 3       // 当前RTC时间
 #define COIL_REG_STANDBY_ENABLE 20   // 休眠使能开关
-
+#define COIL_REG_CMD_IS_ENTRY_STANDBY 5 // 上位机写，1：允许待机 / 0：不允许待机
+#define COIL_REG_STATUS_IS_IN_STANDBY 20 //0：当前非待机状态 1：当前待机状态
 // 时间格式：高字节=小时 / 低字节=分钟，例如 0x1500 = 21:00
 #define POWER_OFF_DEFAULT ((10 << 8) | 22) // 默认关机 22:10
 #define POWER_ON_DEFAULT ((10 << 8) | 24)  // 默认开机 24:10
@@ -124,7 +128,7 @@ extern modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT];
 // gps模块相关
 extern uint16_t off_hhmm;    // 关机时间
 extern uint16_t on_hhmm;     // 开机时间
-extern uint8_t standby_flag; // 待机模式是否使能
+extern uint8_t is_standby_flag; // 待机模式是否使能,1:使能,可待机 0:不使能，不能待机
 
 // 激光测距相关
 extern const uint8_t laser_single_cmd[8]; // 激光测距单次测距指令

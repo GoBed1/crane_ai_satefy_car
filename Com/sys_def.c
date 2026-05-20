@@ -34,7 +34,7 @@ modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT] = {
 // gps相关参数
 uint16_t off_hhmm = 0;
 uint16_t on_hhmm = 0;
-uint8_t standby_flag = 0; 
+uint8_t is_standby_flag = 0; 
 
 // SFA1000A 单次测距指令 (发送给模块的命令)
 const uint8_t laser_single_cmd[8] = {0x55, 0xAA, 0x88, 0xFF, 0xFF, 0xFF, 0xFF, 0x84};

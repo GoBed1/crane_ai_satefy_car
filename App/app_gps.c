@@ -229,9 +229,9 @@ void rtc_power_schedule_check(void)
     uint16_t now_hhmm = (uint16_t)((beijing_h << 8) | beijing_m);
 
     
-     mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME,off_hhmm);
+     mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME,&off_hhmm);
      
-     mb_get_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, on_hhmm);
+     mb_get_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, &on_hhmm);
 
     LOGD("[PWR] internal RTC beijing %02d:%02d | off=%02d:%02d on=%02d:%02d\r\n",
          beijing_h, beijing_m,
@@ -240,10 +240,10 @@ void rtc_power_schedule_check(void)
 
     // 把当前rtc时间暴露在modbusReg中，方便外部监控
         mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
-        mb_get_holding_reg_by_address(COIL_REG_STANDBY_ENABLE,standby_flag);
-    if (now_hhmm == off_hhmm && standby_flag == 1) // 精确匹配且待机功能启用
+        mb_get_coil_reg_by_address(COIL_REG_CMD_IS_ENTRY_STANDBY, &is_standby_flag);
+    if (now_hhmm == off_hhmm && is_standby_flag == 1) // 精确匹配且待机功能启用
     {
-
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_IN_STANDBY, 1);
         uint8_t on_h_utc = ((on_hhmm >> 8) + 24 - TIMEZONE_OFFSET_BEIJING) % 24;
         set_alarm_b(on_h_utc, (uint8_t)(on_hhmm & 0xFF));
         enter_standby();

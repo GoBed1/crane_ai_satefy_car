@@ -4,7 +4,7 @@
 #include "modbus_tcp_server_interface.h"
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include <stdlib.h>
 static void init_modbus_rtu_master(modbusHandler_t *handler, UART_HandleTypeDef *huart, uint16_t *buf, uint16_t buf_len)
 {
     // 1. 清空传入的缓存数组
@@ -164,8 +164,20 @@ void process_bms_logic(void)
             if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(MODBUS_WAIT_TIMEOUT_MS)) == OP_OK_QUERY)
             {
                 int16_t val = (int16_t)bms_read_results[READ_TOTAL_CURRENT];
-                mb_set_input_reg_by_address(INPUT_REG_BMS_TOTAL_CURRENT, (uint16_t)(-val));
-                LOGD("bms total current =%d\n",  val);
+                int16_t abs_val = (uint16_t)abs(val);
+                // 判断是否充电状态
+                if (val <= 0)
+                {
+                    mb_set_input_reg_by_address(INPUT_REG_BMS_TOTAL_CURRENT, (uint16_t)(-val));
+                    mb_set_coil_reg_by_address(COIL_REG_BMS_IS_CHARGING, 0); // 放电状态或无电流状态
+                    LOGD("bms is discharging, current = %d\n",  abs_val);
+                }
+                else if (val > 0)
+                {
+                    mb_set_input_reg_by_address(INPUT_REG_BMS_TOTAL_CURRENT, (uint16_t)val);
+                    mb_set_coil_reg_by_address(COIL_REG_BMS_IS_CHARGING, 1); // 充电状态
+                    LOGD("bms is charging, current = %d\n",  abs_val);
+                }
             }
             else
             {
