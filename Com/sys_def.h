@@ -27,23 +27,48 @@
 #define INPUT_REG_BMS_TOTAL_CURRENT 21         // [上报] BMS总电流
 #define MODBUS_WAIT_TIMEOUT_MS 1000            // Modbus等待超时时间
 // 充电/放电时间采样缓存数组大小
-#define BMS_SAMPLE_BUFFER_SIZE 30              // 充电/放电时间，采样缓存数组大小
-#define BMS_SAMPLE_VALID_COUNT    20      // 实际计算平均值的采样数
+#define BMS_SAMPLE_BUFFER_SIZE 30 // 充电/放电时间，采样缓存数组大小
+#define BMS_SAMPLE_VALID_COUNT 20 // 实际计算平均值的采样数
 /* ========================================================================= */
 /* MPPT 通信宏定义                                                         */
 /* ========================================================================= */
 #define SLAVE_MPPT_ID 1 // MPPT 从机默认ID
 // MPPT 寄存器地址定义 (读功能码04)
-#define REG_MPPT_PV_VOLTAGE    0x3100  // 阵列电压
-#define REG_MPPT_PV_CURRENT    0x3101  // 阵列电流
-#define REG_MPPT_LOAD_VOLTAGE  0x310C  // 负载电压
-#define REG_MPPT_LOAD_CURRENT  0x310D  // 负载电流
-//mppt存放在输入寄存器中的地址定义（上报）
-#define INPUT_REG_MPPT_PV_VOLTAGE    22 // [上报] MPPT阵列电压
-#define INPUT_REG_MPPT_PV_CURRENT    23 // [上报] MPPT阵列电流
-#define INPUT_REG_MPPT_LOAD_VOLTAGE  24   // [上报] MPPT负载电压
-#define INPUT_REG_MPPT_LOAD_CURRENT  25   // [上报] MPPT负载电流
+#define REG_MPPT_PV_VOLTAGE 0x3100   // 阵列电压
+#define REG_MPPT_PV_CURRENT 0x3101   // 阵列电流
+#define REG_MPPT_LOAD_VOLTAGE 0x310C // 负载电压
+#define REG_MPPT_LOAD_CURRENT 0x310D // 负载电流
+// mppt存放在输入寄存器中的地址定义（上报）
+#define INPUT_REG_MPPT_PV_VOLTAGE 22   // [上报] MPPT阵列电压
+#define INPUT_REG_MPPT_PV_CURRENT 23   // [上报] MPPT阵列电流
+#define INPUT_REG_MPPT_LOAD_VOLTAGE 24 // [上报] MPPT负载电压
+#define INPUT_REG_MPPT_LOAD_CURRENT 25 // [上报] MPPT负载电流
+/* ========================================================================= */
+/* GPS 模块相关配置 和 休眠配置                                           */
+/* ========================================================================= */
+#define TEST_GPS_NMEA_PARSER 0 // 开启本地假数据测试
 
+#define WT_RTK_UM982 1
+#define WT_GPS_UM626N 2
+#define WT_GPS_6N 3
+
+#ifndef GPS_TYPE_STD
+#define GPS_TYPE_STD WT_GPS_6N
+#endif
+
+#define RTC_BKP_MAGIC_NUMBER 0x5AA5 // RTC备份域校验魔数，用于判断掉电保持
+
+// --- 休眠系统内部控制寄存器 ---
+#define HOLDING_REG_POWER_ON_TIME 4  // 定时开机时间
+#define HOLDING_REG_POWER_OFF_TIME 5 // 定时关机时间
+#define HOLDING_REG_RTC_TIME 3       // 当前RTC时间
+#define COIL_REG_STANDBY_ENABLE 20   // 休眠使能开关
+
+// 时间格式：高字节=小时 / 低字节=分钟，例如 0x1500 = 21:00
+#define POWER_OFF_DEFAULT ((10 << 8) | 22) // 默认关机 22:10
+#define POWER_ON_DEFAULT ((10 << 8) | 24)  // 默认开机 24:10
+
+#define TIMEZONE_OFFSET_BEIJING 8 // 北京时间相对于UTC的时区偏移
 
 /* ====================相关结构体定义===================================================== */
 // MPPT 读取消息索引
@@ -55,7 +80,6 @@ typedef enum
     READ_MPPT_LOAD_CURRENT,
     READ_MPPT_MSG_COUNT
 } MpptReadMsgIdx_t;
-
 
 typedef enum
 {
@@ -90,5 +114,8 @@ extern uint8_t charge_count;
 extern uint16_t mppt_read_results[READ_MPPT_MSG_COUNT];
 extern modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT];
 
-
-#endif // SYS_DEF_H
+// gps模块相关
+extern uint16_t off_hhmm;    // 关机时间
+extern uint16_t on_hhmm;     // 开机时间
+extern uint8_t standby_flag; // 待机模式是否使能
+#endif                       // SYS_DEF_H
