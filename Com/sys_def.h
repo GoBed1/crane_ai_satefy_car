@@ -46,6 +46,9 @@
 #define INPUT_REG_MPPT_PV_CURRENT 23   // [上报] MPPT阵列电流
 #define INPUT_REG_MPPT_LOAD_VOLTAGE 24 // [上报] MPPT负载电压
 #define INPUT_REG_MPPT_LOAD_CURRENT 25 // [上报] MPPT负载电流
+
+#define REG_MPPT_DEVICE_STATUS 0x3201 // 设备充电状态寄存器地址 (功能码 04)
+#define INPUT_REG_MPPT_CHARGE_STATUS 25 // [上报] MPPT是否正在充电,0:未充电 1:正在充电 2:错误 3：不适用
 /* ========================================================================= */
 /* GPS 模块相关配置 和 休眠配置                                           */
 /* ========================================================================= */
@@ -89,6 +92,7 @@ typedef enum
     READ_MPPT_PV_CURRENT,
     READ_MPPT_LOAD_VOLTAGE,
     READ_MPPT_LOAD_CURRENT,
+    READ_MPPT_CHARGE_STATUS,
     READ_MPPT_MSG_COUNT
 } MpptReadMsgIdx_t;
 
@@ -107,6 +111,14 @@ typedef enum
     ERR_NONE = 0,          // 正常状态
     ERR_BMS_READ_FAIL = 3, // BMS 读取失败
 } SystemErrorCode_t;
+
+// MPPT 充电状态枚举
+typedef enum {
+    MPPT_CHARGE_STATUS_NOT_CHARGING = 0, // 未充电
+    MPPT_CHARGE_STATUS_CHARGING     = 1, // 充电中
+    MPPT_CHARGE_STATUS_ERROR        = 2, // 错误
+    MPPT_CHARGE_STATUS_NA           = 3  // 不适用 (Not Applicable)
+} MpptChargeStatus_t;
 
 extern modbusHandler_t bms_mppt_master; // BMS Modbus 主机句柄
 extern uint16_t modbus_master_buf[128]; // Modbus 主机共用缓冲区

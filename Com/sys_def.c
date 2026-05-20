@@ -29,7 +29,9 @@ modbus_t mppt_read_telegrams[READ_MPPT_MSG_COUNT] = {
     [READ_MPPT_PV_VOLTAGE] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_PV_VOLTAGE, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_PV_VOLTAGE]},
     [READ_MPPT_PV_CURRENT] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_PV_CURRENT, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_PV_CURRENT]},
     [READ_MPPT_LOAD_VOLTAGE] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_LOAD_VOLTAGE, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_LOAD_VOLTAGE]},
-    [READ_MPPT_LOAD_CURRENT] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_LOAD_CURRENT, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_LOAD_CURRENT]}};
+    [READ_MPPT_LOAD_CURRENT] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_LOAD_CURRENT, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_LOAD_CURRENT]},
+    [READ_MPPT_CHARGE_STATUS] = {.u8id = SLAVE_MPPT_ID, .u8fct = MB_FC_READ_INPUT_REGISTER, .u16RegAdd = REG_MPPT_DEVICE_STATUS, .u16CoilsNo = 1, .u16reg = &mppt_read_results[READ_MPPT_CHARGE_STATUS]}
+};
 
 // gps相关参数
 uint16_t off_hhmm = 0;
