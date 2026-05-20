@@ -34,12 +34,12 @@ static uint8_t uart1_send_buff[256U] DMA_BUFFER;
 static uint8_t uart1_send_fifo_buff[256U] DMA_BUFFER;
 static uint8_t uart1_process_buff[256U * 4U] DMA_BUFFER;
 
-extern UART_HandleTypeDef huart5;
-extern DMA_HandleTypeDef hdma_uart5_rx;
-static uint8_t uart5_recv_buff[256U] DMA_BUFFER;
-static uint8_t uart5_send_buff[256U] DMA_BUFFER;
-static uint8_t uart5_send_fifo_buff[256U] DMA_BUFFER;
-static uint8_t uart5_process_buff[256U * 4U] DMA_BUFFER;
+extern UART_HandleTypeDef huart3;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+static uint8_t uart3_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart3_send_buff[256U] DMA_BUFFER;
+static uint8_t uart3_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart3_process_buff[256U * 4U] DMA_BUFFER;
 
 static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 {
@@ -48,19 +48,20 @@ static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 }
 
 const uart_inferface_t uart_manage_table[] = {
+
   {
-    .name = "echo",
-    .uart_h = &huart1,
-    .dma_h = &hdma_usart1_rx,
-    .recv_buffer = uart1_recv_buff,
-    .recv_buffer_size = sizeof(uart1_recv_buff),
-    .process_buffer = uart1_process_buff,
-    .process_buffer_size = sizeof(uart1_process_buff),
-    .recv_callback = echo_callback,// callback_direct_mode
-    .send_buffer = uart1_send_buff,
-    .send_buffer_size = sizeof(uart1_send_buff),
-    .send_fifo_buffer = uart1_send_fifo_buff,
-    .send_fifo_size = sizeof(uart1_send_fifo_buff),
+    .name = "gps",
+    .uart_h = &huart3,
+    .dma_h = &hdma_usart3_rx,
+    .recv_buffer = uart3_recv_buff,
+    .recv_buffer_size = sizeof(uart3_recv_buff),
+    .process_buffer = uart3_process_buff,
+    .process_buffer_size = sizeof(uart3_process_buff),
+    .recv_callback = NULL,// ring_task_mode
+    .send_buffer = uart3_send_buff,
+    .send_buffer_size = sizeof(uart3_send_buff),
+    .send_fifo_buffer = uart3_send_fifo_buff,
+    .send_fifo_size = sizeof(uart3_send_fifo_buff),
     .send_callback = NULL,
   },
 };
