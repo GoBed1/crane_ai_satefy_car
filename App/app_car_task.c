@@ -37,6 +37,13 @@ const osThreadAttr_t laser_attributes = {
     .stack_size = 1024 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
+// 系统监控线程
+osThreadId_t sys_monitor_handle;
+const osThreadAttr_t sys_monitor_attributes = {
+    .name = "SysMonitorTask",
+    .stack_size = 1024 * 2,
+    .priority = (osPriority_t)osPriorityLow, // 状态监控不需要太高优先级
+};
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
 {
