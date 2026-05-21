@@ -50,9 +50,9 @@ void process_mppt_logic(void)
         ModbusQuery(&bms_mppt_master, mppt_read_telegrams[READ_MPPT_CHARGE_STATUS]);
         if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(MODBUS_WAIT_TIMEOUT_MS)) == OP_OK_QUERY)
         {
+            mb_set_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, 0); // 正常
             // 读取成功，进行数据解析分类
             MpptChargeStatus_t status = parse_mppt_charge_status(mppt_read_results[READ_MPPT_CHARGE_STATUS]);
-            
             // 将分类后的状态写入 Modbus TCP 寄存器，供上位机读取
             mb_set_input_reg_by_address(INPUT_REG_MPPT_CHARGE_STATUS, (uint16_t)status);
             
@@ -63,6 +63,7 @@ void process_mppt_logic(void)
             LOGE("MPPT Charge Status read fail\n");
             // 出现通讯故障（读取失败）时，保险起见向上位机汇报为“不适用”状态
             mb_set_input_reg_by_address(INPUT_REG_MPPT_CHARGE_STATUS, (uint16_t)MPPT_CHARGE_STATUS_NA);
+            mb_set_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, 1); // 异常
         }
     }
 }
