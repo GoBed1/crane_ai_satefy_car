@@ -94,11 +94,13 @@ void process_bms_logic(void)
         int err = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(MODBUS_WAIT_TIMEOUT_MS));
         if (err == OP_OK_QUERY)
         {
+            mb_set_coil_reg_by_address(COIL_REG_BMS_IS_READABLE, 0); // 正常
             mb_set_input_reg_by_address(INPUT_REG_BMS_BATTERY, bms_read_results[READ_BATT_LEVEL]);
             LOGD("bms  master read success,Battery = %d\n", bms_read_results[READ_BATT_LEVEL]);
         }
         else
         {
+            mb_set_coil_reg_by_address(COIL_REG_BMS_IS_READABLE, 1); // 异常
             LOGE("bms  modbus master read failed : %d\n", err);
         }
         // 每500ms采样一次放电时间，每10s执行一次平均值放入寄存器（剩余放电时间）
