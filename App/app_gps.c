@@ -79,7 +79,7 @@ void rtc_power_init(void)
     // 解锁备份域访问权限（必须要有，否则无法读取备份寄存器）
     HAL_PWR_EnableBkUpAccess();
 
-    mb_set_coil_reg_by_address(COIL_REG_STANDBY_ENABLE, 1); // 默认启用定时待机功能
+    // mb_set_coil_reg_by_address(COIL_REG_STANDBY_ENABLE, 1); // 默认启用定时待机功能
 
     if (rtc_is_wakeup_from_standby())
     {
@@ -243,7 +243,7 @@ void rtc_power_schedule_check(void)
         mb_get_coil_reg_by_address(COIL_REG_CMD_IS_ENTRY_STANDBY, &is_standby_flag);
     if (now_hhmm == off_hhmm && is_standby_flag == 1) // 精确匹配且待机功能启用
     {
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_IN_STANDBY, 1);
+        // mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_IN_STANDBY, 1);
         uint8_t on_h_utc = ((on_hhmm >> 8) + 24 - TIMEZONE_OFFSET_BEIJING) % 24;
         set_alarm_b(on_h_utc, (uint8_t)(on_hhmm & 0xFF));
         enter_standby();

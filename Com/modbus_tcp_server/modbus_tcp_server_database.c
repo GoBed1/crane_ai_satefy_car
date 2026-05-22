@@ -72,7 +72,7 @@ void mb_init_reg(void) {
         mb_default_reg(REG_TYPE_ALL); // 只有加载失败才去清零
         fs_save_modbus_reg();         // 并创建初始文件
     }
-    
+    mb_default_reg(REG_TYPE_COIL);
     // 4. 允许触发 Flash 写回调
     enable_flash_save_cb = true;
 }

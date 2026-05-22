@@ -70,7 +70,7 @@
 #define HOLDING_REG_RTC_TIME 3       // 当前RTC时间
 #define COIL_REG_STANDBY_ENABLE 20   // 休眠使能开关
 #define COIL_REG_CMD_IS_ENTRY_STANDBY 5 // 上位机写，1：允许待机 / 0：不允许待机
-#define COIL_REG_STATUS_IS_IN_STANDBY 20 //0：当前非待机状态 1：当前待机状态
+#define COIL_REG_STATUS_IS_IN_STANDBY 20 //0：正常模式 ， 1：当前省电状态
 // 时间格式：高字节=小时 / 低字节=分钟，例如 0x1500 = 21:00
 #define POWER_OFF_DEFAULT ((10 << 8) | 22) // 默认关机 22:10
 #define POWER_ON_DEFAULT ((10 << 8) | 24)  // 默认开机 24:10
@@ -90,6 +90,20 @@
 #define COIL_REG_MPPT_IS_READABLE 24   // MPPT是否能读到数据
 #define COIL_REG_LASER_01_IS_READABLE 25   // 激光测距1是否读取数据
 #define COIL_REG_LASER_02_IS_READABLE 26   // 激光测距2是否读取数据
+/* ========================================================================= */
+/* 供电控制与状态宏定义 (根据图片映射)                                        */
+/* ========================================================================= */
+// 控制命令 (上位机下发, 0=断电, 1=供电, 默认1)
+#define COIL_REG_CMD_3V3_EN    1   // 3.3V 供电控制 (LAN8742, 激光)
+#define COIL_REG_CMD_5V_EN     2   // 5V 供电控制 (4G, GPS)
+#define COIL_REG_CMD_CCTV_EN   3   // CCTV / 省电模式控制
+#define COIL_REG_CMD_4G_EN     4   // 4G 模块单独控制
+
+// 状态反馈 (下位机上报, 开=1, 关=0)
+#define COIL_REG_STATUS_3V3    16  // 3.3V 供电状态
+#define COIL_REG_STATUS_5V     17  // 5V 供电控制状态
+#define COIL_REG_STATUS_CCTV   18  // CCTV / 省电模式状态
+#define COIL_REG_STATUS_4G     19  // 4G 模块开关状态
 
 /* ====================相关结构体定义===================================================== */
 // MPPT 读取消息索引
@@ -151,4 +165,8 @@ extern uint8_t is_standby_flag; // 待机模式是否使能,1:使能,可待机 0
 
 // 激光测距相关
 extern const uint8_t laser_single_cmd[8]; // 激光测距单次测距指令
+// 是否进入省电模式的标志，1:进入省电模式 0:正常模式
+extern uint8_t is_power_save_flag; 
+// 0：待机省电且设备正常 / 1：正常使用且设备正常 / 2：异常（查看coil-22~27）
+extern uint16_t car_main_status;
 #endif                       // SYS_DEF_H

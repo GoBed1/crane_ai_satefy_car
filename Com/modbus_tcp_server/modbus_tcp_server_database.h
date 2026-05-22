@@ -6,7 +6,7 @@
 
 #define APP_HOLDING_SIZE 50
 #define APP_INPUT_SIZE   50
-#define APP_COIL_SIZE    20
+#define APP_COIL_SIZE    40
 
 extern uint16_t holding_regs_database[APP_HOLDING_SIZE];
 extern uint8_t  coil_regs_database[APP_COIL_SIZE];

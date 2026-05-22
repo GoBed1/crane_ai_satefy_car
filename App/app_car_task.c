@@ -9,6 +9,7 @@
 #include "app_mppt.h"
 #include "app_gps.h"
 #include "app_laser.h"
+#include "app_sys_monitor.h"
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -37,12 +38,19 @@ const osThreadAttr_t laser_attributes = {
     .stack_size = 1024 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
-// 系统监控线程
+// 状态监控线程
 osThreadId_t sys_monitor_handle;
 const osThreadAttr_t sys_monitor_attributes = {
     .name = "SysMonitorTask",
+    .stack_size = 1024 * 4,
+    .priority = (osPriority_t)osPriorityLow, 
+};
+// 电源控制任务线程
+static osThreadId_t power_ctrl_handle;
+static const osThreadAttr_t power_ctrl_attributes = {
+    .name = "PowerCtrlTask",
     .stack_size = 1024 * 2,
-    .priority = (osPriority_t)osPriorityLow, // 状态监控不需要太高优先级
+    .priority = (osPriority_t)osPriorityNormal, 
 };
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
@@ -90,6 +98,25 @@ void laser_thread(void *argument)
         osDelay(1000);
     }
 }
+// 状态监控线程
+void sys_monitor_thread(void *argument)
+{
+    for (;;)
+    {
+        process_sys_monitor_logic();
+        osDelay(1000);
+    }
+}
+// 电源控制任务线程
+void power_control_thread(void *argument)
+{
+    for (;;)
+    {
+        power_control_logic();
+
+        osDelay(1000); 
+    }
+}
 // 初始化应用层任务模块
 void init_app_car_task(void)
 {
@@ -105,4 +132,8 @@ void init_app_car_task(void)
     gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
     // 激光测距线程
     laser_handle = osThreadNew(laser_thread, NULL, &laser_attributes);
+    // 状态监控线程
+    sys_monitor_handle = osThreadNew(sys_monitor_thread, NULL, &sys_monitor_attributes);
+    // 电源控制任务线程
+    power_ctrl_handle = osThreadNew(power_control_thread, NULL, &power_ctrl_attributes);
 }

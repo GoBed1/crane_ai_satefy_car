@@ -40,3 +40,7 @@ uint8_t is_standby_flag = 0;
 
 // SFA1000A 单次测距指令 (发送给模块的命令)
 const uint8_t laser_single_cmd[8] = {0x55, 0xAA, 0x88, 0xFF, 0xFF, 0xFF, 0xFF, 0x84};
+//是否进入省电模式标志（关闭cctv供电）
+uint8_t is_power_save_flag = 0;
+// 0：待机省电且设备正常 / 1：正常使用且设备正常 / 2：异常（查看coil-22~27）
+uint16_t car_main_status = 1; 
