@@ -72,6 +72,7 @@ static void process_single_laser(const char *uart_name, uint16_t input_reg_add, 
         {
             mb_set_coil_reg_by_address(err_reg_add, 1); // 标记异常
             mb_set_input_reg_by_address(input_reg_add, 0); // 距离强制写 0
+            LOGE("[%s] Offline! Data cannot be read\r\n", uart_name);
         }
     }
 }
