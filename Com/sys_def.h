@@ -104,7 +104,18 @@
 #define COIL_REG_STATUS_5V     17  // 5V 供电控制状态
 #define COIL_REG_STATUS_CCTV   18  // CCTV / 省电模式状态
 #define COIL_REG_STATUS_4G     19  // 4G 模块开关状态
+/* ========================================================================= */
+/* 网络设备 Ping 监控定义                                                      */
+/* ========================================================================= */
+// 设备 IP 地址 
+#define IP_ADDR_CCTV    "192.168.61.52" // CCTV 摄像头 IP
+#define IP_ADDR_BRIDGE  "192.168.61.62" // 网桥 IP
 
+#define COIL_REG_ERR_STATUS_BRIDGE   22   // 网桥 是否掉线 (0:正常 1:掉线)
+#define COIL_REG_ERR_STATUS_CCTV     27   // CCTV 是否掉线 (0:正常 1:掉线)
+
+#define PING_TIMEOUT_MS 1500 // Ping 超时时间，单位毫秒
+#define CCTV_PORT 80          // CCTV 服务端口
 /* ====================相关结构体定义===================================================== */
 // MPPT 读取消息索引
 typedef enum
@@ -140,6 +151,16 @@ typedef enum {
     MPPT_CHARGE_STATUS_ERROR        = 2, // 错误
     MPPT_CHARGE_STATUS_NA           = 3  // 不适用 (Not Applicable)
 } MpptChargeStatus_t;
+
+// 定义 ICMP 报文结构体，摆脱对外部 ping.h
+struct icmp_echo_packet {
+    uint8_t type;       // 类型 (8 代表请求)
+    uint8_t code;       // 代码 (0)
+    uint16_t chksum;    // 校验和
+    uint16_t id;        // 标识符
+    uint16_t seqno;     // 序号
+    uint8_t data[32];   // 32字节的填充假数据
+};
 
 extern modbusHandler_t bms_mppt_master; // BMS Modbus 主机句柄
 extern uint16_t modbus_master_buf[128]; // Modbus 主机共用缓冲区

@@ -1205,6 +1205,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
   LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d, %p, %"SZT_F", 0x%x, ..)\n", s, mem, len, flags));
   sock = get_socket(s);
   if (!sock) {
+    printf("[debug]lwip_recvfrom: get_socket failed\n");
     return -1;
   }
 #if LWIP_TCP
@@ -1212,6 +1213,8 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
     ret = lwip_recv_tcp(sock, mem, len, flags);
     lwip_recv_tcp_from(sock, from, fromlen, "lwip_recvfrom", s, ret);
     done_socket(sock);
+    printf("[debug]lwip_recvfrom: TCP recv completed\n");
+
     return ret;
   } else
 #endif
@@ -1235,6 +1238,8 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
                                   s, lwip_strerr(err)));
       sock_set_errno(sock, err_to_errno(err));
       done_socket(sock);
+    printf("[debug]lwip_recvfrom: Error occurred\n");
+
       return -1;
     }
     ret = (ssize_t)LWIP_MIN(LWIP_MIN(len, datagram_len), SSIZE_MAX);

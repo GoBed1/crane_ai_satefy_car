@@ -6,4 +6,5 @@
 // 初始化系统状态监控任务
 void process_sys_monitor_logic(void);
 void power_control_logic(void);
+void net_ping_monitor(void);
 #endif // APP_SYS_MONITOR_H
