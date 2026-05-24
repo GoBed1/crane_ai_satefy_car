@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define RESET_4G_GPIO_Port GPIOD
 #define RELOAD_4G_Pin GPIO_PIN_15
 #define RELOAD_4G_GPIO_Port GPIOD
+#define POWER_4G_3V3_Pin GPIO_PIN_15
+#define POWER_4G_3V3_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
