@@ -79,8 +79,6 @@ void rtc_power_init(void)
     // 解锁备份域访问权限（必须要有，否则无法读取备份寄存器）
     HAL_PWR_EnableBkUpAccess();
 
-    // mb_set_coil_reg_by_address(COIL_REG_STANDBY_ENABLE, 1); // 默认启用定时待机功能
-
     if (rtc_is_wakeup_from_standby())
     {
         LOGI("[PWR] from standby\r\n");
@@ -104,8 +102,19 @@ void rtc_power_init(void)
             s_gps_synced = 0;
         }
     }
-}
+    uint16_t current_off_time = 0;
+    mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME, &current_off_time);
 
+    // 如果寄存器是 0，说明是刚开机（上位机还没下发配置），填入默认值
+    if (current_off_time == 0)
+    {
+        mb_set_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME, POWER_OFF_DEFAULT);
+        mb_set_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, POWER_ON_DEFAULT);
+        LOGI("[PWR] Init default schedule: OFF=%02d:%02d, ON=%02d:%02d\r\n",
+             POWER_OFF_DEFAULT >> 8, POWER_OFF_DEFAULT & 0xFF,
+             POWER_ON_DEFAULT >> 8, POWER_ON_DEFAULT & 0xFF);
+    }
+}
 
 void update_gps_app(void)
 {
@@ -159,7 +168,7 @@ void update_gps_app(void)
     }
 }
 
-//打印内部RTC时间
+// 打印内部RTC时间
 void print_internal_rtc_time(void)
 {
     RTC_TimeTypeDef sTime = {0};
@@ -228,10 +237,9 @@ void rtc_power_schedule_check(void)
     uint8_t beijing_m = sTime.Minutes;
     uint16_t now_hhmm = (uint16_t)((beijing_h << 8) | beijing_m);
 
-    
-     mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME,&off_hhmm);
-     
-     mb_get_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, &on_hhmm);
+    mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME, &off_hhmm);
+
+    mb_get_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, &on_hhmm);
 
     LOGD("[PWR] internal RTC beijing %02d:%02d | off=%02d:%02d on=%02d:%02d\r\n",
          beijing_h, beijing_m,
@@ -239,8 +247,8 @@ void rtc_power_schedule_check(void)
          on_hhmm >> 8, on_hhmm & 0xFF);
 
     // 把当前rtc时间暴露在modbusReg中，方便外部监控
-        mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
-        mb_get_coil_reg_by_address(COIL_REG_CMD_IS_ENTRY_STANDBY, &is_standby_flag);
+    mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
+    mb_get_coil_reg_by_address(COIL_REG_CMD_IS_ENTRY_STANDBY, &is_standby_flag);
     if (now_hhmm == off_hhmm && is_standby_flag == 1) // 精确匹配且待机功能启用
     {
         // mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_IN_STANDBY, 1);
@@ -282,7 +290,7 @@ void set_alarm_b(uint8_t utc_h, uint8_t utc_m)
     LOGI("[RTC] Alarm B: UTC %02d:%02d\r\n", utc_h, utc_m);
 }
 
-// 进入待机，不返回
+// 进入stm32待机，不返回
 void enter_standby(void)
 {
     // ================== 安全校验防线 ==================
@@ -319,7 +327,8 @@ void enter_standby(void)
     HAL_PWR_EnterSTANDBYMode();
 }
 
-void gps_rtc_app_init(void){
+void gps_rtc_app_init(void)
+{
     config_gps_app();
     rtc_power_init();
 }
@@ -327,6 +336,10 @@ void gps_rtc_app_init(void){
 // ========== 2. 核心业务总线 (自带时序) ==========
 void process_gps_logic(void)
 {
+    if (is_power_sleep_flag == 1)
+    {
+        return; 
+    }
     static TickType_t last_1000ms = 0;
 
     // 1. 串口缓冲区解析 (每次循环都执行，防止缓冲区溢出)
@@ -336,8 +349,7 @@ void process_gps_logic(void)
     if (xTaskGetTickCount() - last_1000ms >= pdMS_TO_TICKS(1000))
     {
         last_1000ms = xTaskGetTickCount();
-        
+
         rtc_power_schedule_check();
-        
     }
 }

@@ -39,6 +39,10 @@ void init_modbus_master(void)
 
 void process_bms_logic(void)
 {
+    if (is_power_sleep_flag == 1)
+    {
+        return; // 系统休眠中，跳过读取
+    }
     static TickType_t last_500ms = 0;
     static TickType_t last_7s = 0;
     static TickType_t last_11s = 0;

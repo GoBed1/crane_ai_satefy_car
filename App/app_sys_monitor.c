@@ -8,7 +8,6 @@
 #include "lwip/icmp.h"
 #include "lwipopts.h"
 #include "lwip/inet_chksum.h"
-#include "lwip/sockets.h"
 #include "lwip/netdb.h"
 // 系统监控线程主体逻辑
 void process_sys_monitor_logic(void)
@@ -17,50 +16,116 @@ void process_sys_monitor_logic(void)
     uint8_t err_bms = 0, err_mppt = 0, err_laser1 = 0, err_laser2 = 0;
     uint8_t err_cctv = 0, err_bridge = 0;
 
+    // 获取当前小车是否在省电模式 或 休眠模式
+    mb_get_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, &is_power_save_flag);
+    mb_get_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, &is_power_sleep_flag);
+    if (is_power_sleep_flag == 1)
+    {
+        car_main_status = 2; // 休眠模式
+        mb_set_holding_reg_by_address(HOLDING_REG_SYSTEM_STATUS, car_main_status);
+        return;
+    }
+
     // 读取各个设备的异常状态寄存器
     mb_get_coil_reg_by_address(COIL_REG_BMS_IS_READABLE, &err_bms);
     mb_get_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, &err_mppt);
     mb_get_coil_reg_by_address(COIL_REG_LASER_01_IS_READABLE, &err_laser1);
     mb_get_coil_reg_by_address(COIL_REG_LASER_02_IS_READABLE, &err_laser2);
-
     mb_get_coil_reg_by_address(COIL_REG_ERR_STATUS_CCTV, &err_cctv);
     // mb_get_coil_reg_by_address(COIL_REG_ERR_BRIDGE, &err_bridge);
-
-    // 获取当前小车是否在待机/省电模式
-    mb_get_coil_reg_by_address(COIL_REG_STATUS_IS_IN_STANDBY, &is_power_save_flag);
-    LOGD("car_main_status:%d\n", car_main_status);
-    if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
-    // if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
+    if (is_power_save_flag == 1)
     {
-        car_main_status = 2; // Fault (异常)
-    }
-    else
-    {
-        // 走到这里说明没有任何设备是 '1' (异常)
-        if (is_power_save_flag == 1)
+        // 在省电模式下，CCTV是被物理断电
+        if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_bridge == 1)
         {
-            car_main_status = 0;                                 // 省电模式且设备正常
-            mb_set_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, 1); // cctv断电
+            car_main_status = 3; // 异常
+
         }
         else
         {
-            car_main_status = 1; // 正常模式且设备正常
+            car_main_status = 0; // 省电模式
         }
     }
-
-    // 总状态写入保持寄存器
+    else
+    {
+        // 正常模式下，所有外设（包括 CCTV）都必须正常
+        if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
+        {
+            car_main_status = 3; // 异常
+        }
+        else
+        {
+            car_main_status = 1; // 正常
+        }
+    }
     mb_set_holding_reg_by_address(HOLDING_REG_SYSTEM_STATUS, car_main_status);
 }
 // 系统电源控制
 void power_control_logic(void)
 {
+    uint8_t sleep_cmd = 0, sleep_status = 0;
+    uint8_t save_cmd = 0, save_status = 0;
+
+    // 获取当前的模式指令和状态
+    mb_get_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, &sleep_cmd);
+    mb_get_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, &sleep_status);
+    mb_get_coil_reg_by_address(COIL_REG_CMD_IS_IN_POWER_SAVE, &save_cmd);
+    mb_get_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, &save_status);
+    // ================= 休眠模式 =================
+    if (sleep_cmd == 1)
+    {
+        if (sleep_status == 0) // 刚收到休眠指令
+        {
+            LOGI("Enter SLEEP Mode: All periphs OFF\n");
+            // 物理断电
+            HAL_GPIO_WritePin(POWER_3V_GPIO_Port, POWER_3V_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
+
+            // 更新所有单体设备状态为 1(断开)
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
+
+            mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 1); // 反馈已休眠
+            if (save_status == 1)
+                mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 0); // 清除冲突状态
+        }
+        return;
+    }
+    else if (sleep_cmd == 0 && sleep_status == 1)
+    {
+        LOGI("Exit SLEEP Mode\n");
+        is_power_sleep_flag = 0; // 同步本地状态
+        mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 0); // 退出休眠
+    }
+    // ================= 省电模式 =================
+    if (save_cmd == 1)
+    {
+        if (save_status == 0) // 刚收到省电指令
+        {
+            LOGI("Enter POWER SAVE Mode: CCTV OFF\n");
+            HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_RESET);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 1);
+        }
+        mb_set_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, 1);
+    }
+    else if (save_cmd == 0 && save_status == 1)
+    {
+        LOGI("Exit POWER SAVE Mode\n");
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 0);
+        mb_set_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, 0);
+    }
+
+    // ================= 独立设备供电控制 =================
     uint8_t cmd = 0, status = 0;
 
-    // ================= 3.3V 供电控制 =================
-    // 0=供电/开，1=断电/关
+    // --- 3.3V ---
     mb_get_coil_reg_by_address(COIL_REG_CMD_3V3_EN, &cmd);
     mb_get_coil_reg_by_address(COIL_REG_STATUS_3V3, &status);
-
     if (cmd == 0 && status == 1)
     {
         LOGI("3.3V Power ON\n");
@@ -74,10 +139,9 @@ void power_control_logic(void)
         mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
     }
 
-    // ================= 5V 供电控制 =================
+    // --- 5V ---
     mb_get_coil_reg_by_address(COIL_REG_CMD_5V_EN, &cmd);
     mb_get_coil_reg_by_address(COIL_REG_STATUS_5V, &status);
-
     if (cmd == 0 && status == 1)
     {
         LOGI("5V Power ON\n");
@@ -91,10 +155,9 @@ void power_control_logic(void)
         mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
     }
 
-    // ================= CCTV 供电控制 =================
+    // --- CCTV ---
     mb_get_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, &cmd);
     mb_get_coil_reg_by_address(COIL_REG_STATUS_CCTV, &status);
-
     if (cmd == 0 && status == 1)
     {
         LOGI("CCTV Power ON\n");
@@ -108,10 +171,9 @@ void power_control_logic(void)
         mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
     }
 
-    // ================= 4G 模块供电控制 =================
+    // --- 4G ---
     mb_get_coil_reg_by_address(COIL_REG_CMD_4G_EN, &cmd);
     mb_get_coil_reg_by_address(COIL_REG_STATUS_4G, &status);
-
     if (cmd == 0 && status == 1)
     {
         LOGI("4G Module Power ON\n");
@@ -135,7 +197,8 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 
     // 创建 TCP 套接字
     sock = lwip_socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) return 0;
+    if (sock < 0)
+        return 0;
 
     target_addr.sin_family = AF_INET;
     target_addr.sin_port = lwip_htons(port);
@@ -147,13 +210,13 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 
     // 发起连接
     int conn_res = lwip_connect(sock, (struct sockaddr *)&target_addr, sizeof(target_addr));
-    
-    // 如果返回 0 说明瞬间连上了（局域网很常见）
-    if (conn_res == 0) {
+
+    if (conn_res == 0)
+    {
         ret = 1;
-    } 
-    // 如果返回 -1 且错误码为 EINPROGRESS，说明连接正在进行中
-    else if (conn_res < 0 && errno == EINPROGRESS) {
+    }
+    else if (conn_res < 0 && errno == EINPROGRESS)
+    {
         fd_set write_set;
         FD_ZERO(&write_set);
         FD_SET(sock, &write_set);
@@ -164,11 +227,13 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 
         // 使用 select 等待连接结果
         int select_res = lwip_select(sock + 1, NULL, &write_set, NULL, &tv);
-        if (select_res > 0 && FD_ISSET(sock, &write_set)) {
+        if (select_res > 0 && FD_ISSET(sock, &write_set))
+        {
             int error = 0;
             socklen_t len = sizeof(error);
             lwip_getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len);
-            if (error == 0) {
+            if (error == 0)
+            {
                 ret = 1; // 成功建立连接
             }
         }
@@ -180,6 +245,10 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 // 网络设备 Ping 监控函数
 void net_ping_monitor(void)
 {
+    if (is_power_sleep_flag == 1 || is_power_save_flag == 1)
+    {
+        return; 
+    }
     // 探测 80 端口，给 1.5 秒超时时间
     if (tcp_port_ping(IP_ADDR_CCTV, CCTV_PORT, PING_TIMEOUT_MS) == 1)
     {

@@ -40,6 +40,10 @@ static MpptChargeStatus_t parse_mppt_charge_status(uint16_t reg_3201_val)
  */
 void process_mppt_logic(void)
 {
+     if (is_power_sleep_flag == 1)
+    {
+        return; // 系统休眠中，跳过读取
+    }
     static TickType_t last_8s = 0;
     
     // 每 8s 轮询一次 MPPT 数据 
