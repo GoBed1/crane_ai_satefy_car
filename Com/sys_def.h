@@ -68,15 +68,15 @@
 #define HOLDING_REG_POWER_ON_TIME 4  // 定时开机时间
 #define HOLDING_REG_POWER_OFF_TIME 5 // 定时关机时间
 #define HOLDING_REG_RTC_TIME 3       // 当前RTC时间
-#define COIL_REG_CMD_IS_ENTRY_STANDBY 5 // 上位机写，1：允许STM32待机 / 0：不允许STM32待机
-#define COIL_REG_CMD_IS_IN_POWER_SAVE 6  // 上位机写，1：进入省电模式 / 0：退出省电模式
+#define COIL_REG_CMD_IS_ENTRY_STANDBY 6 // 上位机写，1：允许STM32待机 / 0：不允许STM32待机
+#define COIL_REG_CMD_IS_IN_POWER_SAVE 7  // 上位机写，1：进入省电模式 / 0：退出省电模式
 #define COIL_REG_STATUS_IS_POWER_SAVE 20 //0：正常模式 ， 1：当前省电状态
 // 时间格式：高字节=小时 / 低字节=分钟，例如 0x1500 = 21:00
 #define POWER_OFF_DEFAULT ((19 << 8) | 0) // 默认关机 19:00
 #define POWER_ON_DEFAULT ((7 << 8) | 0)  // 默认开机 7:00
 
 #define TIMEZONE_OFFSET_BEIJING 8 // 北京时间相对于UTC的时区偏移
-#define COIL_REG_IS_ENTRY_SLEEP_CMD 7 //休眠模式指令寄存器地址 0：不进入休眠 / 1：进入休眠
+#define COIL_REG_IS_ENTRY_SLEEP_CMD 8 //休眠模式指令寄存器地址 0：不进入休眠 / 1：进入休眠
 #define COIL_REG_IS_IN_SLEEP_STATUS 28 //休眠模式状态寄存器地址 0：正常模式 / 1：休眠模式
 
 /* ========================================================================= */
@@ -84,6 +84,8 @@
 /* ========================================================================= */
 #define INPUT_REG_LASER_01_DISTANCE 32 // [上报] 激光测距仪01距离
 #define INPUT_REG_LASER_02_DISTANCE 33 // [上报] 激光测距仪02距离
+#define COIL_REG_CMD_LASER         3 // 上位机写，0：开启激光测距仪 / 1：关闭激光测距仪
+
 /* ========================================================================= */
 /* 小车系统异常定义                                                               */
 /* ========================================================================= */
@@ -96,15 +98,15 @@
 /* 供电控制与状态宏定义                                             */
 /* ========================================================================= */
 // 控制命令 (上位机下发, 0=断电, 1=供电, 默认1)
-#define COIL_REG_CMD_3V3_EN    1   // 3.3V 供电控制 (LAN8742, 激光)
+#define COIL_REG_CMD_3V3_EN    1   // 3.3V 供电控制 
 #define COIL_REG_CMD_5V_EN     2   // 5V 供电控制 (4G, GPS)
-#define COIL_REG_CMD_CCTV_EN   3   // CCTV / 省电模式控制
+#define COIL_REG_CMD_LASER_EN   3   // 激光测距仪开关控制
 #define COIL_REG_CMD_4G_EN     4   // 4G 模块单独控制
 
 // 状态反馈 (下位机上报, 开=1, 关=0)
 #define COIL_REG_STATUS_3V3    16  // 3.3V 供电状态
 #define COIL_REG_STATUS_5V     17  // 5V 供电控制状态
-#define COIL_REG_STATUS_CCTV   18  // CCTV / 省电模式状态
+#define COIL_REG_STATUS_LASER   18  // 激光测距仪开关状态
 #define COIL_REG_STATUS_4G     19  // 4G 模块开关状态
 /* ========================================================================= */
 /* 网络设备 Ping 监控定义                                                      */

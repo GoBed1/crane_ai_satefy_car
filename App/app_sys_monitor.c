@@ -80,13 +80,13 @@ void power_control_logic(void)
             // 物理断电
             HAL_GPIO_WritePin(POWER_3V_GPIO_Port, POWER_3V_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
 
             // 更新所有单体设备状态为 1(断开)
             mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
-            mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
 
             mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 1); // 反馈已休眠
@@ -106,18 +106,18 @@ void power_control_logic(void)
     {
         if (save_status == 0) // 刚收到省电指令
         {
-            LOGI("Enter POWER SAVE Mode: CCTV OFF\n");
-            HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_RESET);
-            mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
+            LOGI("Enter POWER SAVE Mode: LASER OFF\n");
+            HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 1);
         }
-        mb_set_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, 1);
+        mb_set_coil_reg_by_address(COIL_REG_CMD_LASER_EN, 1);
     }
     else if (save_cmd == 0 && save_status == 1)
     {
         LOGI("Exit POWER SAVE Mode\n");
         mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 0);
-        mb_set_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, 0);
+        mb_set_coil_reg_by_address(COIL_REG_CMD_LASER_EN, 0);
     }
 
     // ================= 独立设备供电控制 =================
@@ -155,20 +155,20 @@ void power_control_logic(void)
         mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
     }
 
-    // --- CCTV ---
-    mb_get_coil_reg_by_address(COIL_REG_CMD_CCTV_EN, &cmd);
-    mb_get_coil_reg_by_address(COIL_REG_STATUS_CCTV, &status);
+    // --- LASER ---
+    mb_get_coil_reg_by_address(COIL_REG_CMD_LASER_EN, &cmd);
+    mb_get_coil_reg_by_address(COIL_REG_STATUS_LASER, &status);
     if (cmd == 0 && status == 1)
     {
-        LOGI("CCTV Power ON\n");
-        HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_SET);
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 0);
+        LOGI("LASER Power ON\n");
+        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_SET);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 0);
     }
     else if (cmd == 1 && status == 0)
     {
-        LOGI("CCTV Power OFF\n");
-        HAL_GPIO_WritePin(POWER_CCTV_GPIO_Port, POWER_CCTV_Pin, GPIO_PIN_RESET);
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_CCTV, 1);
+        LOGI("LASER Power OFF\n");
+        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
     }
 
     // --- 4G ---

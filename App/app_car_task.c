@@ -14,7 +14,7 @@
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
     .name = "HeartLedTask",
-    .stack_size = 1024 * 4,
+    .stack_size = 1024 * 2,
     .priority = (osPriority_t)osPriorityBelowNormal,
 };
 // modbus读取线程
@@ -22,14 +22,14 @@ osThreadId_t bms_read_handle;
 const osThreadAttr_t bms_read_attributes = {
     .name = "BmsReadTask",
     .stack_size = 1024 * 4,
-    .priority = (osPriority_t)osPriorityNormal1,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 // gps待机线程
 osThreadId_t gps_standby_handle;
 const osThreadAttr_t gps_standby_attributes = {
     .name = "GPSStandby",
     .stack_size = 1024 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+    .priority = (osPriority_t)osPriorityBelowNormal1,
 };
 // laser激光测距线程
 osThreadId_t laser_handle;
@@ -43,14 +43,14 @@ osThreadId_t sys_monitor_handle;
 const osThreadAttr_t sys_monitor_attributes = {
     .name = "SysMonitorTask",
     .stack_size = 1024 * 4,
-    .priority = (osPriority_t)osPriorityLow, 
+    .priority = (osPriority_t)osPriorityBelowNormal, 
 };
 // 电源控制任务线程
 static osThreadId_t power_ctrl_handle;
 static const osThreadAttr_t power_ctrl_attributes = {
     .name = "PowerCtrlTask",
-    .stack_size = 1024 * 2,
-    .priority = (osPriority_t)osPriorityNormal, 
+    .stack_size = 1024 * 4,
+    .priority = (osPriority_t)osPriorityAboveNormal, 
 };
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
@@ -130,7 +130,7 @@ void init_app_car_task(void)
     // modbus读取线程
     bms_read_handle = osThreadNew(bms_read_thread, NULL, &bms_read_attributes);
     // gps待机线程
-    gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
+    // gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
     // 激光测距线程
     laser_handle = osThreadNew(laser_thread, NULL, &laser_attributes);
     // 状态监控线程

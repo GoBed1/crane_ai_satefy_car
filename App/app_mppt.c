@@ -65,8 +65,8 @@ void process_mppt_logic(void)
         else
         {
             LOGE("MPPT Charge Status read fail\n");
-            // 出现通讯故障（读取失败）时，保险起见向上位机汇报为“不适用”状态
-            mb_set_input_reg_by_address(INPUT_REG_MPPT_CHARGE_STATUS, (uint16_t)MPPT_CHARGE_STATUS_NA);
+            // 出现通讯故障（读取失败）时，保险起见向上位机汇报为“0xFFFF”状态
+            mb_set_input_reg_by_address(INPUT_REG_MPPT_CHARGE_STATUS, 0xFFFF);
             mb_set_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, 1); // 异常
         }
     }
