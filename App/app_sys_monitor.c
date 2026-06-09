@@ -16,8 +16,7 @@ void process_sys_monitor_logic(void)
     uint8_t err_bms = 0, err_mppt = 0, err_laser1 = 0, err_laser2 = 0;
     uint8_t err_cctv = 0, err_bridge = 0;
 
-    // 获取当前小车是否在省电模式 或 休眠模式
-    mb_get_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, &is_power_save_flag);
+    // 获取当前小车是否在休眠模式
     mb_get_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, &is_power_sleep_flag);
     if (is_power_sleep_flag == 1)
     {
@@ -32,45 +31,27 @@ void process_sys_monitor_logic(void)
     mb_get_coil_reg_by_address(COIL_REG_LASER_01_IS_READABLE, &err_laser1);
     mb_get_coil_reg_by_address(COIL_REG_LASER_02_IS_READABLE, &err_laser2);
     mb_get_coil_reg_by_address(COIL_REG_ERR_STATUS_CCTV, &err_cctv);
-    // mb_get_coil_reg_by_address(COIL_REG_ERR_BRIDGE, &err_bridge);
-    if (is_power_save_flag == 1)
+    mb_get_coil_reg_by_address(COIL_REG_ERR_STATUS_BRIDGE, &err_bridge);
+   // 正常模式下，所有外设必须正常
+    if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
     {
-        // 在省电模式下，CCTV是被物理断电
-        if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_bridge == 1)
-        {
-            car_main_status = 3; // 异常
-
-        }
-        else
-        {
-            car_main_status = 0; // 省电模式
-        }
+        car_main_status = 3; // 异常
     }
     else
     {
-        // 正常模式下，所有外设（包括 CCTV）都必须正常
-        if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
-        {
-            car_main_status = 3; // 异常
-        }
-        else
-        {
-            car_main_status = 1; // 正常
-        }
+        car_main_status = 1; // 正常
     }
+    printf("[INFO]car_main_status: %d\n", car_main_status);
     mb_set_holding_reg_by_address(HOLDING_REG_SYSTEM_STATUS, car_main_status);
 }
 // 系统电源控制
 void power_control_logic(void)
 {
     uint8_t sleep_cmd = 0, sleep_status = 0;
-    uint8_t save_cmd = 0, save_status = 0;
 
     // 获取当前的模式指令和状态
     mb_get_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, &sleep_cmd);
     mb_get_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, &sleep_status);
-    mb_get_coil_reg_by_address(COIL_REG_CMD_IS_IN_POWER_SAVE, &save_cmd);
-    mb_get_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, &save_status);
     // ================= 休眠模式 =================
     if (sleep_cmd == 1)
     {
@@ -82,16 +63,15 @@ void power_control_logic(void)
             HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
-
+            HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET); 
             // 更新所有单体设备状态为 1(断开)
             mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
 
             mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 1); // 反馈已休眠
-            if (save_status == 1)
-                mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 0); // 清除冲突状态
         }
         return;
     }
@@ -101,25 +81,7 @@ void power_control_logic(void)
         is_power_sleep_flag = 0; // 同步本地状态
         mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 0); // 退出休眠
     }
-    // ================= 省电模式 =================
-    if (save_cmd == 1)
-    {
-        if (save_status == 0) // 刚收到省电指令
-        {
-            LOGI("Enter POWER SAVE Mode: LASER OFF\n");
-            HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
-            mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
-            mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 1);
-        }
-        mb_set_coil_reg_by_address(COIL_REG_CMD_LASER_EN, 1);
-    }
-    else if (save_cmd == 0 && save_status == 1)
-    {
-        LOGI("Exit POWER SAVE Mode\n");
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_IS_POWER_SAVE, 0);
-        mb_set_coil_reg_by_address(COIL_REG_CMD_LASER_EN, 0);
-    }
-
+    
     // ================= 独立设备供电控制 =================
     uint8_t cmd = 0, status = 0;
 
@@ -186,6 +148,21 @@ void power_control_logic(void)
         HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
         mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
     }
+    // --- BRIDGE---
+    mb_get_coil_reg_by_address(COIL_REG_CMD_BRIDGE_EN, &cmd);
+    mb_get_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, &status);
+    if (cmd == 0 && status == 1)
+    {
+        LOGI("BRIDGE Power ON\n");
+        HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_SET);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 0);
+    }
+    else if (cmd == 1 && status == 0)
+    {
+        LOGI("BRIDGE Power OFF\n");
+        HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
+    }
 }
 
 // TCP 端口探测
@@ -245,7 +222,7 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 // 网络设备 Ping 监控函数
 void net_ping_monitor(void)
 {
-    if (is_power_sleep_flag == 1 || is_power_save_flag == 1)
+    if (is_power_sleep_flag == 1)
     {
         return; 
     }
@@ -259,5 +236,16 @@ void net_ping_monitor(void)
     {
         mb_set_coil_reg_by_address(COIL_REG_ERR_STATUS_CCTV, 1); // 掉线
         LOGE("CCTV Service is OFFLINE! ! !\n");
+    }
+    // 探测 网桥 80 端口
+    if (tcp_port_ping(IP_ADDR_BRIDGE, BRIDGE_PORT, PING_TIMEOUT_MS) == 1)
+    {
+        mb_set_coil_reg_by_address(COIL_REG_ERR_STATUS_BRIDGE, 0); // 在线
+        LOGI("BRIDGE Service is ONLINE!\n");
+    }
+    else
+    {
+        mb_set_coil_reg_by_address(COIL_REG_ERR_STATUS_BRIDGE, 1); // 掉线
+        LOGE("BRIDGE Service is OFFLINE! ! !\n");
     }
 }

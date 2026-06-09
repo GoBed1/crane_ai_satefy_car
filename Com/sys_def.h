@@ -102,12 +102,13 @@
 #define COIL_REG_CMD_5V_EN     2   // 5V 供电控制 (4G, GPS)
 #define COIL_REG_CMD_LASER_EN   3   // 激光测距仪开关控制
 #define COIL_REG_CMD_4G_EN     4   // 4G 模块单独控制
-
+#define COIL_REG_CMD_BRIDGE_EN 5   //  网桥模块单独控制
 // 状态反馈 (下位机上报, 开=1, 关=0)
 #define COIL_REG_STATUS_3V3    16  // 3.3V 供电状态
 #define COIL_REG_STATUS_5V     17  // 5V 供电控制状态
 #define COIL_REG_STATUS_LASER   18  // 激光测距仪开关状态
 #define COIL_REG_STATUS_4G     19  // 4G 模块开关状态
+#define COIL_REG_STATUS_BRIDGE 29  //网桥模块开关状态
 /* ========================================================================= */
 /* 网络设备 Ping 监控定义                                                      */
 /* ========================================================================= */
@@ -120,6 +121,7 @@
 
 #define PING_TIMEOUT_MS 1500 // Ping 超时时间，单位毫秒
 #define CCTV_PORT 80          // CCTV 服务端口
+#define BRIDGE_PORT 80          // 网桥 服务端口
 /* ====================相关结构体定义===================================================== */
 // MPPT 读取消息索引
 typedef enum
