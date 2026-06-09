@@ -71,6 +71,20 @@ void StartDefaultTask(void *argument);
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
+/* Hook prototypes */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
+
+/* USER CODE BEGIN 4 */
+// void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+// {
+//    /* Run time stack overflow checking is performed if
+   
+//    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+//    called if a stack overflow is detected. */
+   
+// }
+/* USER CODE END 4 */
+
 /**
   * @brief  FreeRTOS initialization
   * @param  None
@@ -146,6 +160,7 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
    /* ETH_CODE: add breakpoint when stack oveflow is detected by FreeRTOS.
     * Useful for debugging issues.
     */
+   printf ("1111111111Stack Overflow in task %s\n", pcTaskName);
    __BKPT(0);
 }
 /* USER CODE END Application */

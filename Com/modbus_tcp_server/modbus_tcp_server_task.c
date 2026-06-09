@@ -41,7 +41,7 @@
 #define MODBUS_RX_BUF_LEN  260    // Enough for one complete Modbus-TCP PDU
 #define MODBUS_TX_BUF_LEN  260
 
-#define WORKER_TASK_STACK_SIZE 4096  // bytes for each per-client worker
+#define WORKER_TASK_STACK_SIZE 2048  // bytes for each per-client worker
 #define SERVER_TASK_PRIORITY   (osPriority_t)osPriorityNormal
 
 #define LAN8742A_MAX_CLIENTS 4

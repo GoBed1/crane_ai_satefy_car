@@ -104,7 +104,7 @@ void sys_monitor_thread(void *argument)
     for (;;)
     {
         process_sys_monitor_logic();
-        net_ping_monitor();
+        // net_ping_monitor();
         osDelay(1000);
     }
 }

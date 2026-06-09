@@ -49,14 +49,22 @@
 /* Parameters set in STM32CubeMX LwIP Configuration GUI -*/
 /*----- Default value in ETH configuration GUI in CubeMx: 1524 -----*/
 #define ETH_RX_BUFFER_SIZE 1536
+/*----- Default Value for MEMP_NUM_UDP_PCB: 4 ---*/
+#define MEMP_NUM_UDP_PCB 20
+/*----- Default Value for MEMP_NUM_TCP_PCB: 5 ---*/
+#define MEMP_NUM_TCP_PCB 20
 /*----- Value in opt.h for MEM_ALIGNMENT: 1 -----*/
 #define MEM_ALIGNMENT 4
 /*----- Default Value for MEM_SIZE: 1600 ---*/
 #define MEM_SIZE 131048
 /*----- Default Value for H7 devices: 0x30004000 -----*/
 #define LWIP_RAM_HEAP_POINTER 0x30020000
+/*----- Default Value for MEMP_NUM_TCP_PCB_LISTEN: 8 ---*/
+#define MEMP_NUM_TCP_PCB_LISTEN 20
+/*----- Default Value for MEMP_NUM_SYS_TIMEOUT: 3 ---*/
+#define MEMP_NUM_SYS_TIMEOUT 20
 /*----- Default Value for MEMP_NUM_NETCONN: 4 ---*/
-#define MEMP_NUM_NETCONN 10
+#define MEMP_NUM_NETCONN 15
 /*----- Default Value for MEMP_NUM_SOCKET_SETGETSOCKOPT_DATA: 8 ---*/
 #define MEMP_NUM_SOCKET_SETGETSOCKOPT_DATA 10
 /*----- Value supported for H7 devices: 1 -----*/
@@ -98,13 +106,17 @@
 /*----- Value in opt.h for DEFAULT_TCP_RECVMBOX_SIZE: 0 -----*/
 #define DEFAULT_TCP_RECVMBOX_SIZE 6
 /*----- Value in opt.h for DEFAULT_ACCEPTMBOX_SIZE: 0 -----*/
-#define DEFAULT_ACCEPTMBOX_SIZE 6
+#define DEFAULT_ACCEPTMBOX_SIZE 12
 /*----- Default Value for LWIP_TCP_KEEPALIVE: 0 ---*/
 #define LWIP_TCP_KEEPALIVE 1
+/*----- Default Value for LWIP_SO_SNDTIMEO: 0 ---*/
+#define LWIP_SO_SNDTIMEO 1
 /*----- Default Value for LWIP_SO_RCVTIMEO: 0 ---*/
 #define LWIP_SO_RCVTIMEO 1
 /*----- Value in opt.h for RECV_BUFSIZE_DEFAULT: INT_MAX -----*/
 #define RECV_BUFSIZE_DEFAULT 2000000000
+/*----- Default Value for SO_REUSE: 0 ---*/
+#define SO_REUSE 1
 /*----- Value in opt.h for LWIP_STATS: 1 -----*/
 #define LWIP_STATS 0
 /*----- Value in opt.h for CHECKSUM_GEN_IP: 1 -----*/
