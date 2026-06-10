@@ -215,7 +215,11 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
             }
         }
     }
-
+    struct linger slinger;
+    slinger.l_onoff = 1;
+    slinger.l_linger = 0; // 超时设为0，强制发送 RST 瞬间断开并释放 PCB
+    lwip_setsockopt(sock, SOL_SOCKET, SO_LINGER, &slinger, sizeof(slinger));
+    
     lwip_close(sock);
     return ret;
 }
