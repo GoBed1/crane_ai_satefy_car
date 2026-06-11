@@ -93,7 +93,7 @@ void rtc_power_init(void)
             LOGI("[PWR] RTC time is kept alive by VBAT (Coin Cell)!\r\n");
             // 纽扣电池生效，RTC 时间有效，允许直接进行关机计划检测
             s_gps_synced = 1;
-            print_internal_rtc_time();
+            
         }
         else
         {
@@ -102,6 +102,7 @@ void rtc_power_init(void)
             s_gps_synced = 0;
         }
     }
+    print_internal_rtc_time();
     uint16_t current_off_time = 0;
     mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME, &current_off_time);
 
@@ -219,6 +220,50 @@ void gps_sync_rtc_once(void)
     s_gps_synced = 1; // 控制关机逻辑，必须锁星后才允许判断
 }
 
+// 软休眠模式
+void rtc_power_sleep_check(void)
+{
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    // 使用上位机写入的RTC 时间
+    uint8_t beijing_h = sTime.Hours; 
+    uint8_t beijing_m = sTime.Minutes;
+    uint16_t now_hhmm = (uint16_t)((beijing_h << 8) | beijing_m);
+
+    mb_get_holding_reg_by_address(HOLDING_REG_POWER_OFF_TIME, &off_hhmm);
+    mb_get_holding_reg_by_address(HOLDING_REG_POWER_ON_TIME, &on_hhmm);
+    //设置rtc时间
+    mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
+
+    // 使用静态变量记录上一次触发的时间
+    static uint16_t last_trigger_hhmm = 0xFFFF;
+
+    // 只有当时间分钟跳变时，才进去做判断
+    if (now_hhmm != last_trigger_hhmm)
+    {
+        // 刚好到了关机时间 (如 19:00)
+        if (now_hhmm == off_hhmm)
+        {
+            LOGI("[PWR] RTC Auto Trigger: Enter Soft Sleep\r\n");
+            // 往 coil-8 写 1，促使电源控制线程进入软休眠
+            mb_set_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, 1);
+            last_trigger_hhmm = now_hhmm; // 记录已触发
+        }
+        // 刚好到了开机时间 (如 06:00 / 07:00)
+        else if (now_hhmm == on_hhmm)
+        {
+            LOGI("[PWR] RTC Auto Trigger: Exit Soft Sleep\r\n");
+            // 往 coil-8 写 0，促使电源控制线程退出软休眠
+            mb_set_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, 0);
+            last_trigger_hhmm = now_hhmm; // 记录已触发
+        }
+    }
+}
+
 // 循环每10s检测
 void rtc_power_schedule_check(void)
 {
@@ -329,27 +374,23 @@ void enter_standby(void)
 
 void gps_rtc_app_init(void)
 {
-    config_gps_app();
+    // config_gps_app();
     rtc_power_init();
 }
 
 // ========== 2. 核心业务总线 (自带时序) ==========
 void process_gps_logic(void)
 {
-    if (is_power_sleep_flag == 1)
-    {
-        return; 
-    }
     static TickType_t last_1000ms = 0;
 
     // 1. 串口缓冲区解析 (每次循环都执行，防止缓冲区溢出)
-    update_gps_app();
+    // update_gps_app();
 
     // 2. 休眠日程检测与心跳灯 (每 1000ms 执行一次)
     if (xTaskGetTickCount() - last_1000ms >= pdMS_TO_TICKS(1000))
     {
         last_1000ms = xTaskGetTickCount();
-
-        rtc_power_schedule_check();
+        rtc_power_sleep_check();
+        // rtc_power_schedule_check();
     }
 }

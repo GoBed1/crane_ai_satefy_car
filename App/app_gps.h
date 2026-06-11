@@ -7,5 +7,6 @@
 
 void gps_rtc_app_init(void);   
 void process_gps_logic(void);  
+void rtc_power_sleep_check(void);
 
 #endif 
