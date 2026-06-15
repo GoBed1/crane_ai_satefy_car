@@ -25,15 +25,20 @@ void process_sys_monitor_logic(void)
         return;
     }
 
-    // 读取各个设备的异常状态寄存器
-    mb_get_coil_reg_by_address(COIL_REG_BMS_IS_READABLE, &err_bms);
-    mb_get_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, &err_mppt);
     mb_get_coil_reg_by_address(COIL_REG_LASER_01_IS_READABLE, &err_laser1);
     mb_get_coil_reg_by_address(COIL_REG_LASER_02_IS_READABLE, &err_laser2);
     mb_get_coil_reg_by_address(COIL_REG_ERR_STATUS_CCTV, &err_cctv);
+
+#if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)
+    mb_get_coil_reg_by_address(COIL_REG_BMS_IS_READABLE, &err_bms);
+    mb_get_coil_reg_by_address(COIL_REG_MPPT_IS_READABLE, &err_mppt);
     mb_get_coil_reg_by_address(COIL_REG_ERR_STATUS_BRIDGE, &err_bridge);
-   // 正常模式下，所有外设必须正常
+
     if (err_bms == 1 || err_mppt == 1 || err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1 || err_bridge == 1)
+#else
+    // 动臂塔吊只判断激光和 CCTV
+    if (err_laser1 == 1 || err_laser2 == 1 || err_cctv == 1)
+#endif
     {
         car_main_status = 3; // 异常
     }
@@ -63,7 +68,7 @@ void power_control_logic(void)
             HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET); 
+            HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET);
             // 更新所有单体设备状态为 1(断开)
             mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
@@ -78,10 +83,10 @@ void power_control_logic(void)
     else if (sleep_cmd == 0 && sleep_status == 1)
     {
         LOGI("Exit SLEEP Mode\n");
-        is_power_sleep_flag = 0; // 同步本地状态
+        is_power_sleep_flag = 0;                                    // 同步本地状态
         mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 0); // 退出休眠
     }
-    
+
     // ================= 独立设备供电控制 =================
     uint8_t cmd = 0, status = 0;
 
@@ -219,7 +224,7 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
     slinger.l_onoff = 1;
     slinger.l_linger = 0; // 超时设为0，强制发送 RST 瞬间断开并释放 PCB
     lwip_setsockopt(sock, SOL_SOCKET, SO_LINGER, &slinger, sizeof(slinger));
-    
+
     lwip_close(sock);
     return ret;
 }
@@ -228,7 +233,7 @@ void net_ping_monitor(void)
 {
     if (is_power_sleep_flag == 1)
     {
-        return; 
+        return;
     }
     // 探测 80 端口，给 1.5 秒超时时间
     if (tcp_port_ping(IP_ADDR_CCTV, CCTV_PORT, PING_TIMEOUT_MS) == 1)
@@ -241,6 +246,7 @@ void net_ping_monitor(void)
         mb_set_coil_reg_by_address(COIL_REG_ERR_STATUS_CCTV, 1); // 掉线
         LOGE("CCTV Service is OFFLINE! ! !\n");
     }
+#if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)
     // 探测 网桥 80 端口
     if (tcp_port_ping(IP_ADDR_BRIDGE, BRIDGE_PORT, PING_TIMEOUT_MS) == 1)
     {
@@ -252,4 +258,5 @@ void net_ping_monitor(void)
         mb_set_coil_reg_by_address(COIL_REG_ERR_STATUS_BRIDGE, 1); // 掉线
         LOGE("BRIDGE Service is OFFLINE! ! !\n");
     }
+#endif
 }

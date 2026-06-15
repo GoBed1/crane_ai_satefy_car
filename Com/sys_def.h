@@ -198,4 +198,15 @@ extern volatile uint8_t is_power_save_flag;
 extern volatile uint8_t is_power_sleep_flag;
 // 0：待机省电且设备正常 / 1：正常使用且设备正常 / 2：休眠模式 / 3：异常（查看coil-22~27）
 extern uint16_t car_main_status;
+
+/* ========================================================================= */
+/* 小车类型配置（平头 / 动臂）                                                */
+/* ========================================================================= */
+#define CRANE_TYPE_FLAT_TOP  0  // 平头塔吊
+#define CRANE_TYPE_LUFFING   1  // 动臂塔吊
+
+// 【修改点】在此处一键切换当前小车的类型！
+#define CURRENT_CRANE_TYPE   CRANE_TYPE_FLAT_TOP
+
+
 #endif                       // SYS_DEF_H
