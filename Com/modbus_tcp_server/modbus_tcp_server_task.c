@@ -274,7 +274,7 @@ exit_task:
 void modbus_tcp_init_server(void)
 {
 // fs_mount_medium();
-  mb_init_reg();
+//   mb_init_reg();
   
   modbus_tcp_server_handle = osThreadNew(lan8742a_modbus_tcp_server_task, NULL, &modbus_tcp_server_attributes);
   if (modbus_tcp_server_handle == NULL)

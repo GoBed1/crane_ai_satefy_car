@@ -124,17 +124,18 @@ void init_app_car_task(void)
     specify_redirect_uart(&huart5);
     printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
     init_uart_manage(); // 初始化串口管理模块（gps、laser01/02）
-
+    mb_init_reg();
 #if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)
     init_modbus_master(); // 初始化modbus主机模块 (BMS、mppt等)
     // modbus读取线程
     bms_read_handle = osThreadNew(bms_read_thread, NULL, &bms_read_attributes);
+    // 休眠待机线程
+    gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
 #endif
 
     // 呼吸道任务线程
     heart_led_handle = osThreadNew(heart_beat_thread, NULL, &heart_led_attributes);
-    // 休眠待机线程
-    gps_standby_handle = osThreadNew(gps_standby_thread, NULL, &gps_standby_attributes);
+    
     // 激光测距线程
     laser_handle = osThreadNew(laser_thread, NULL, &laser_attributes);
     // 状态监控线程

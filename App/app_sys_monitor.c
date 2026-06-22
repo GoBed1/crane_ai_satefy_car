@@ -66,23 +66,40 @@ void power_control_logic(void)
             // 物理断电
             HAL_GPIO_WritePin(POWER_3V_GPIO_Port, POWER_3V_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_SET);
             HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_RESET);
+
+            #if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)//动臂不断交换机电源
             HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET);
+            mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
+            #endif
+
             // 更新所有单体设备状态为 1(断开)
             mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
             mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
-            mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
-
-            mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 1); // 反馈已休眠
+            is_power_sleep_flag = 1;                                    // 同步本地状态
+            mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, is_power_sleep_flag); // 反馈已休眠
         }
         return;
     }
     else if (sleep_cmd == 0 && sleep_status == 1)
     {
         LOGI("Exit SLEEP Mode\n");
+        // 1. 物理上电 
+        HAL_GPIO_WritePin(POWER_3V_GPIO_Port, POWER_3V_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(POWER_5V_GPIO_Port, POWER_5V_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET); // 注意：LASER供电逻辑可能与其他不同，休眠是SET，唤醒就是RESET
+        HAL_GPIO_WritePin(POWER_4G_GPIO_Port, POWER_4G_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_SET);
+
+        // 2. 0：正常接通 1：断开
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_3V3, 0);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_5V, 0);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 0);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 0);
+        mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 0);
         is_power_sleep_flag = 0;                                    // 同步本地状态
         mb_set_coil_reg_by_address(COIL_REG_IS_IN_SLEEP_STATUS, 0); // 退出休眠
     }
@@ -128,13 +145,13 @@ void power_control_logic(void)
     if (cmd == 0 && status == 1)
     {
         LOGI("LASER Power ON\n");
-        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
         mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 0);
     }
     else if (cmd == 1 && status == 0)
     {
         LOGI("LASER Power OFF\n");
-        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(POWER_LASER_GPIO_Port, POWER_LASER_Pin, GPIO_PIN_SET);
         mb_set_coil_reg_by_address(COIL_REG_STATUS_LASER, 1);
     }
 

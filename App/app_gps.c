@@ -4,8 +4,8 @@
 extern RTC_HandleTypeDef hrtc;
 
 // 全局标志位
-uint8_t s_gps_synced = 0;               // 授时同步标志（上位机授时或GPS锁星后置1）
-volatile uint16_t is_soft_standby = 0;  // 软休眠状态标志（爆闪灯断电）
+uint8_t s_gps_synced = 0;              // 授时同步标志（上位机授时或GPS锁星后置1）
+volatile uint16_t is_soft_standby = 0; // 软休眠状态标志（爆闪灯断电）
 
 // 内部函数声明
 static void sync_time_from_host(uint16_t host_time_hhmm);
@@ -14,7 +14,6 @@ static void enter_standby(void);
 static void set_alarm_b(uint8_t local_h, uint8_t local_m);
 static void gps_sync_rtc_once(void);
 static void print_internal_rtc_time(void);
-
 
 // =========================================================================
 // ==================== 上位机授时 与 软休眠核心逻辑 ====================
@@ -61,6 +60,17 @@ void rtc_power_init(void)
              POWER_OFF_DEFAULT >> 8, POWER_OFF_DEFAULT & 0xFF,
              POWER_ON_DEFAULT >> 8, POWER_ON_DEFAULT & 0xFF);
     }
+    // 初始化RTC时间
+    RTC_TimeTypeDef sTime = {0};
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+
+    // 清空一下日期，防止读取时间时HAL库内部的日历锁死
+    RTC_DateTypeDef sDate = {0};
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    uint16_t now_hhmm = (uint16_t)((sTime.Hours << 8) | sTime.Minutes);
+    mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
+    LOGI("[PWR] Init: Sync MCU RTC to Modbus Reg: %02d:%02d\r\n", sTime.Hours, sTime.Minutes);
 }
 
 // 将上位机发来的时间写入硬件 RTC
@@ -95,19 +105,19 @@ void rtc_power_schedule_check(void)
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
-    uint8_t beijing_h = sTime.Hours; 
+    uint8_t beijing_h = sTime.Hours;
     uint8_t beijing_m = sTime.Minutes;
     uint16_t now_hhmm = (uint16_t)((beijing_h << 8) | beijing_m);
 
     // ------------------ 上位机授时检测逻辑 ------------------
     uint16_t reg_time = 0;
     mb_get_holding_reg_by_address(HOLDING_REG_RTC_TIME, &reg_time);
-    
+
     int16_t now_minutes = beijing_h * 60 + beijing_m;
     int16_t reg_minutes = ((reg_time >> 8) & 0xFF) * 60 + (reg_time & 0xFF);
-    
+
     int16_t diff = abs(reg_minutes - now_minutes);
-    if (diff > 720) 
+    if (diff > 720)
     {
         diff = 1440 - diff; // 处理 23:59 和 00:00 跨日跳变的差值
     }
@@ -118,14 +128,14 @@ void rtc_power_schedule_check(void)
         sync_time_from_host(reg_time);
         now_hhmm = reg_time; // 立即使用新时间进行后续休眠判断
     }
-    
+
     // 把当前准确的 RTC 时间刷回 Modbus 寄存器，供外部监控
     mb_set_holding_reg_by_address(HOLDING_REG_RTC_TIME, now_hhmm);
 
     // 安全保证：如果没有魔数（从没授过时），立刻退出，绝不瞎休眠
     if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != RTC_BKP_MAGIC_NUMBER)
     {
-        return; 
+        return;
     }
 
     // ------------------ 休眠触发逻辑 ------------------
@@ -145,24 +155,24 @@ void rtc_power_schedule_check(void)
             LOGI("[PWR] Auto Trigger: Enter Soft Sleep\r\n");
             // 触发软休眠：通知电源线程拉低供电引脚
             mb_set_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, 1);
-            last_trigger_hhmm = now_hhmm; 
-            
+            last_trigger_hhmm = now_hhmm;
+
             // 兼容触发硬休眠 (如果上位机开启了硬休眠开关)
             uint8_t is_standby_flag = 0;
             mb_get_coil_reg_by_address(COIL_REG_CMD_IS_ENTRY_STANDBY, &is_standby_flag);
-            if (is_standby_flag == 1) 
+            if (is_standby_flag == 1)
             {
                 uint8_t on_h_local = (on_hhmm >> 8) & 0xFF;
                 set_alarm_b(on_h_local, (uint8_t)(on_hhmm & 0xFF));
-                enter_standby(); 
+                enter_standby();
             }
         }
         // 刚好到了开机时间 (如 07:00)
         else if (now_hhmm == on_hhmm)
         {
-            LOGI("[PWR] Auto Trigger: Exit Soft Sleep\r\n"); 
+            LOGI("[PWR] Auto Trigger: Exit Soft Sleep\r\n");
             mb_set_coil_reg_by_address(COIL_REG_IS_ENTRY_SLEEP_CMD, 0);
-            last_trigger_hhmm = now_hhmm; 
+            last_trigger_hhmm = now_hhmm;
         }
     }
 }
@@ -258,10 +268,12 @@ static uint8_t rtc_is_wakeup_from_standby(void)
 void update_gps_app(void)
 {
     uart_inferface_t *m_obj = uart_manage_get_obj_by_name("gps");
-    if (m_obj == NULL) return;
+    if (m_obj == NULL)
+        return;
 
     lwrb_sz_t available = lwrb_get_full(&m_obj->process_ring_buffer);
-    if (available == 0) return;
+    if (available == 0)
+        return;
 
     uint8_t to_read_buffer[128];
     lwrb_sz_t to_read = (available > sizeof(to_read_buffer)) ? sizeof(to_read_buffer) : available;
@@ -284,11 +296,12 @@ void update_gps_app(void)
 static void gps_sync_rtc_once(void)
 {
     static uint8_t rtc_synced = 0;
-    if (rtc_synced) return;
+    if (rtc_synced)
+        return;
 
     RTC_TimeTypeDef sTime = {0};
     // 注意：GPS 发来的是零时区(UTC)时间，必须 +8 小时转为北京时间写入 RTC
-    sTime.Hours = (g_nmea_gnss.time_h + 8) % 24; 
+    sTime.Hours = (g_nmea_gnss.time_h + 8) % 24;
     sTime.Minutes = g_nmea_gnss.time_m;
     sTime.Seconds = g_nmea_gnss.time_s;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
@@ -303,7 +316,7 @@ static void gps_sync_rtc_once(void)
     osDelay(100);
 
     rtc_synced = 1;
-    s_gps_synced = 1; 
+    s_gps_synced = 1;
 }
 
 // 打印内部调试时间
@@ -320,7 +333,7 @@ static void print_internal_rtc_time(void)
 static void set_alarm_b(uint8_t local_h, uint8_t local_m)
 {
     HAL_PWR_EnableBkUpAccess();
-    HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_B); 
+    HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_B);
 
     RTC_AlarmTypeDef sAlarm = {0};
     sAlarm.AlarmTime.Hours = local_h;
@@ -349,7 +362,7 @@ static void enter_standby(void)
     if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != RTC_BKP_MAGIC_NUMBER)
     {
         LOGE("[PWR-ERR] Backup domain invalid! Magic number lost.\r\n");
-        return;           
+        return;
     }
 
     LOGI("[PWR] enter STM32 hard standby mode...\r\n");
@@ -361,9 +374,9 @@ static void enter_standby(void)
 
     __HAL_RTC_ALARM_CLEAR_FLAG(&hrtc, RTC_FLAG_ALRBF);
     __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
-    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WKUP1 | PWR_FLAG_WKUP2 | PWR_FLAG_WKUP3 | 
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WKUP1 | PWR_FLAG_WKUP2 | PWR_FLAG_WKUP3 |
                          PWR_FLAG_WKUP4 | PWR_FLAG_WKUP5 | PWR_FLAG_WKUP6 | PWR_FLAG_SB);
-    
+
     // 真正断开芯片内核供电，仅保留 RTC 区域
     HAL_PWR_EnterSTANDBYMode();
 }
