@@ -1,0 +1,9 @@
+#pragma once
+
+#define MG_ARCH MG_ARCH_CUBE
+#define MG_ENABLE_TCPIP 0
+#define MG_ENABLE_DRIVER_STM32H 0
+#define MG_ENABLE_LWIP 1
+#define MG_ENABLE_SOCKET 1
+#define MG_ENABLE_PACKED_FS 1
+#define MG_OTA MG_OTA_STM32H7

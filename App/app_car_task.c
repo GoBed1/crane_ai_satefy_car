@@ -10,6 +10,9 @@
 #include "app_gps.h"
 #include "app_laser.h"
 #include "app_sys_monitor.h"
+#include "mongoose_callbacks.h"
+#include "mongoose_config.h"
+#include "mongoose.h"
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -51,6 +54,12 @@ static const osThreadAttr_t power_ctrl_attributes = {
     .name = "PowerCtrlTask",
     .stack_size = 1024 * 4,
     .priority = (osPriority_t)osPriorityAboveNormal,
+};
+osThreadId_t web_server_handle;
+const osThreadAttr_t web_server_attributes = {
+    .name = "WebServerTask",
+    .stack_size = 1024 * 8, 
+    .priority = (osPriority_t)osPriorityNormal, 
 };
 // 心跳LED闪烁任务线程
 void heart_beat_thread(void *argument)
@@ -118,11 +127,37 @@ void power_control_thread(void *argument)
         osDelay(1000);
     }
 }
+void web_server_thread(void *argument)
+{
+    extern struct netif gnetif;
+    {
+      uint32_t start_tick = osKernelGetTickCount();
+      while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
+      {
+        if ((osKernelGetTickCount() - start_tick) > 60000U)
+        {
+          /* 网络在 60s 内未就绪，执行系统重启 */
+        //   system_reset();
+        HAL_NVIC_SystemReset();
+        }
+        osDelay(100);
+      }
+    }
+    mongoose_init();
+    
+    for (;;)
+    {
+        mongoose_poll();
+        
+        osDelay(10); 
+    }
+}
+
 // 初始化应用层任务模块
 void init_app_car_task(void)
 {
     specify_redirect_uart(&huart5);
-    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
+    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5111111111111111\r\n");
     init_uart_manage(); // 初始化串口管理模块（gps、laser01/02）
     mb_init_reg();
 #if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)
@@ -142,4 +177,6 @@ void init_app_car_task(void)
     sys_monitor_handle = osThreadNew(sys_monitor_thread, NULL, &sys_monitor_attributes);
     // 电源控制任务线程
     power_ctrl_handle = osThreadNew(power_control_thread, NULL, &power_ctrl_attributes);
+    // Web ota线程
+    web_server_handle = osThreadNew(web_server_thread, NULL, &web_server_attributes);
 }

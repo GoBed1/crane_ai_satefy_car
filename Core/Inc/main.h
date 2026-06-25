@@ -77,6 +77,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
 #define LOG_INFO(tag, ...) printf(__VA_ARGS__)
+#define HTTP_URL "http://192.168.61.36/"
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
