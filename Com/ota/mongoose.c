@@ -564,7 +564,7 @@ bool mg_ota_flash_write(const void *buf, size_t len, struct mg_flash *flash) {
   }
   return ok;
 }
-
+extern volatile uint8_t is_ota_updating;
 bool mg_ota_flash_end(struct mg_flash *flash) {
   char *base = (char *) flash->start + flash->size / 2;
   bool ok = false;
@@ -576,6 +576,9 @@ bool mg_ota_flash_end(struct mg_flash *flash) {
               size, ok ? "ok" : "fail"));
     s_size = 0;
     if (ok) ok = flash->swap_fn();
+  }
+  if(ok!=true){
+    is_ota_updating = 0;
   }
   MG_INFO(("Finishing OTA: %s", ok ? "ok" : "fail"));
   return ok;
@@ -9095,7 +9098,7 @@ static MG_SOCKET_TYPE raccept(MG_SOCKET_TYPE sock, union usa *usa,
   } while (MG_SOCK_INTR(fd));
   return fd;
 }
-
+extern volatile uint8_t is_ota_updating;
 static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
   struct mg_connection *c = NULL;
   union usa usa;
@@ -9119,6 +9122,7 @@ static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
     MG_ERROR(("%lu OOM", lsn->id));
     closesocket(fd);
   } else {
+    is_ota_updating = 1;
     tomgaddr(&usa, &c->rem, sa_len != sizeof(usa.sin));
     LIST_ADD_HEAD(struct mg_connection, &mgr->conns, c);
     c->fd = S2PTR(fd);

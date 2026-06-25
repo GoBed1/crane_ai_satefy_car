@@ -13,6 +13,7 @@
 #include "mongoose_callbacks.h"
 #include "mongoose_config.h"
 #include "mongoose.h"
+#include "iwdg.h"
 // 呼吸道任务线程
 osThreadId_t heart_led_handle;
 const osThreadAttr_t heart_led_attributes = {
@@ -147,6 +148,8 @@ void web_server_thread(void *argument)
     
     for (;;)
     {
+        //看门狗喂狗
+        HAL_IWDG_Refresh(&hiwdg1);
         mongoose_poll();
         
         osDelay(10); 
@@ -157,7 +160,7 @@ void web_server_thread(void *argument)
 void init_app_car_task(void)
 {
     specify_redirect_uart(&huart5);
-    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5111111111111111\r\n");
+    printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
     init_uart_manage(); // 初始化串口管理模块（gps、laser01/02）
     mb_init_reg();
 #if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)

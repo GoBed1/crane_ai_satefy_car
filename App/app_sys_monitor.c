@@ -248,7 +248,7 @@ int tcp_port_ping(const char *target_ip, uint16_t port, uint32_t timeout_ms)
 // 网络设备 Ping 监控函数
 void net_ping_monitor(void)
 {
-    if (is_power_sleep_flag == 1)
+    if (is_power_sleep_flag == 1|| is_ota_updating == 1)
     {
         return;
     }

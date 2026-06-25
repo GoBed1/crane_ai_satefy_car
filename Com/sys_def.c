@@ -47,3 +47,5 @@ uint8_t volatile is_power_sleep_flag = 0;
 
 // 0：待机省电且设备正常 / 1：正常使用且设备正常 / 2：休眠模式 / 3：异常（查看coil-22~27）
 uint16_t car_main_status = 1; 
+// 定义 OTA 升级状态标志位 (0: 正常, 1: 正在OTA)
+volatile uint8_t is_ota_updating = 0;
