@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "dma.h"
+#include "iwdg.h"
 #include "lwip.h"
 #include "quadspi.h"
 #include "rtc.h"
@@ -119,6 +120,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
+  MX_IWDG1_Init();
   /* USER CODE BEGIN 2 */
   init_app_car_task(); // 初始化应用层任务模块
 
