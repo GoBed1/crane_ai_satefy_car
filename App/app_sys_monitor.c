@@ -171,20 +171,20 @@ void power_control_logic(void)
         mb_set_coil_reg_by_address(COIL_REG_STATUS_4G, 1);
     }
     // --- BRIDGE---
-    mb_get_coil_reg_by_address(COIL_REG_CMD_BRIDGE_EN, &cmd);
-    mb_get_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, &status);
-    if (cmd == 0 && status == 1)
-    {
-        LOGI("BRIDGE Power ON\n");
-        HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_SET);
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 0);
-    }
-    else if (cmd == 1 && status == 0)
-    {
-        LOGI("BRIDGE Power OFF\n");
-        HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET);
-        mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
-    }
+    // mb_get_coil_reg_by_address(COIL_REG_CMD_BRIDGE_EN, &cmd);
+    // mb_get_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, &status);
+    // if (cmd == 0 && status == 1)
+    // {
+    //     LOGI("BRIDGE Power ON\n");
+    //     HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_SET);
+    //     mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 0);
+    // }
+    // else if (cmd == 1 && status == 0)
+    // {
+    //     LOGI("BRIDGE Power OFF\n");
+    //     HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_RESET);
+    //     mb_set_coil_reg_by_address(COIL_REG_STATUS_BRIDGE, 1);
+    // }
 }
 
 // TCP 端口探测
