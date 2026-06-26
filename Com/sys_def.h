@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "main.h"
-#include "modbus.h"
+#include "Modbus.h"
 #include "ModbusConfig.h"
 /* ========================================================================= */
 /* 日志定义                                                     */
