@@ -121,6 +121,7 @@ void sys_monitor_thread(void *argument)
 // 电源控制任务线程
 void power_control_thread(void *argument)
 {
+    HAL_GPIO_WritePin(BRIDGE_EN_GPIO_Port, BRIDGE_EN_Pin, GPIO_PIN_SET);
     for (;;)
     {
         power_control_logic();
