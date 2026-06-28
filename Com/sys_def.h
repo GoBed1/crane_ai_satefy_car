@@ -206,7 +206,7 @@ extern uint16_t car_main_status;
 #define CRANE_TYPE_LUFFING   1  // 动臂塔吊
 
 // 【修改点】在此处一键切换当前小车的类型！
-#define CURRENT_CRANE_TYPE   CRANE_TYPE_LUFFING
+#define CURRENT_CRANE_TYPE   CRANE_TYPE_FLAT_TOP
 
 extern volatile uint8_t is_ota_updating;
 
