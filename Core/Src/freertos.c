@@ -160,8 +160,8 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
    /* ETH_CODE: add breakpoint when stack oveflow is detected by FreeRTOS.
     * Useful for debugging issues.
     */
-   NVIC_SystemReset();
    printf ("1111111111Stack Overflow in task %s\n", pcTaskName);
+   NVIC_SystemReset();
    __BKPT(0);
 }
 /* USER CODE END Application */

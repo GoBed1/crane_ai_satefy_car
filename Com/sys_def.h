@@ -25,7 +25,7 @@
 #define HARDWARE_VERSION_MAJOR  2   // 硬件 v2.0.0
 #define HARDWARE_VERSION_MINOR  0
 #define HARDWARE_VERSION_PATCH  0
-#define SOFTWARE_VERSION_MAJOR  2   // 软件 v2.0.0
+#define SOFTWARE_VERSION_MAJOR  2   // 软件 v2.0.0  
 #define SOFTWARE_VERSION_MINOR  0
 #define SOFTWARE_VERSION_PATCH  0
 /* ========================================================================= */
@@ -221,7 +221,7 @@ extern uint16_t car_main_status;
 /* ========================================================================= */
 #define CRANE_TYPE_FLAT_TOP  1  // 平头塔吊
 #define CRANE_TYPE_LUFFING   2  // 动臂塔吊
-
+#define INPUT_REG_CRANE_TYPE 6 // [上报] 小车类型寄存器地址
 // 【修改点】在此处一键切换当前小车的类型！
 #define CURRENT_CRANE_TYPE   CRANE_TYPE_FLAT_TOP
 
