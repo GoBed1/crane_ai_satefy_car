@@ -277,3 +277,53 @@ void net_ping_monitor(void)
     }
 #endif
 }
+
+
+void set_system_info_to_input_regs(void)
+{
+    uint8_t month = 1;
+    uint8_t day = 1;
+    uint8_t hour = 0;
+    uint8_t minute = 0;
+
+    const char *date_str = __DATE__;
+    char m0 = date_str[0];
+    char m1 = date_str[1];
+    char m2 = date_str[2];
+
+    if (m0 == 'J' && m1 == 'a' && m2 == 'n') month = 1;
+    else if (m0 == 'F' && m1 == 'e' && m2 == 'b') month = 2;
+    else if (m0 == 'M' && m1 == 'a' && m2 == 'r') month = 3;
+    else if (m0 == 'A' && m1 == 'p' && m2 == 'r') month = 4;
+    else if (m0 == 'M' && m1 == 'a' && m2 == 'y') month = 5;
+    else if (m0 == 'J' && m1 == 'u' && m2 == 'n') month = 6;
+    else if (m0 == 'J' && m1 == 'u' && m2 == 'l') month = 7;
+    else if (m0 == 'A' && m1 == 'u' && m2 == 'g') month = 8;
+    else if (m0 == 'S' && m1 == 'e' && m2 == 'p') month = 9;
+    else if (m0 == 'O' && m1 == 'c' && m2 == 't') month = 10;
+    else if (m0 == 'N' && m1 == 'o' && m2 == 'v') month = 11;
+    else if (m0 == 'D' && m1 == 'e' && m2 == 'c') month = 12;
+
+    day = (uint8_t)(((date_str[4] == ' ') ? 0 : (date_str[4] - '0')) * 10 + (date_str[5] - '0'));
+
+    const char *time_str = __TIME__;
+    hour = (uint8_t)((time_str[0] - '0') * 10 + (time_str[1] - '0'));
+    minute = (uint8_t)((time_str[3] - '0') * 10 + (time_str[4] - '0'));
+
+    /* 3. 编译时间 */
+    uint16_t compile_time_h = (uint16_t)(month * 100U + day);  
+    uint16_t compile_time_l = (uint16_t)(hour * 100U + minute);
+
+    uint16_t hw_ver_h = (uint16_t)HARDWARE_VERSION_MAJOR;
+    uint16_t hw_ver_l = (uint16_t)(HARDWARE_VERSION_MINOR * 10U + HARDWARE_VERSION_PATCH);
+
+    uint16_t sw_ver_h = (uint16_t)SOFTWARE_VERSION_MAJOR;
+    uint16_t sw_ver_l = (uint16_t)(SOFTWARE_VERSION_MINOR * 10U + SOFTWARE_VERSION_PATCH);
+
+    mb_set_input_reg_by_address(INPUT_REG_HARDWARE_VERSION_HIGH,    hw_ver_h);     
+    mb_set_input_reg_by_address(INPUT_REG_HARDWARE_VERSION_LOW,    hw_ver_l);      
+    mb_set_input_reg_by_address(INPUT_REG_SOFTWARE_VERSION_HIGH,    sw_ver_h);     
+    mb_set_input_reg_by_address(INPUT_REG_SOFTWARE_VERSION_LOW,    sw_ver_l);      
+    mb_set_input_reg_by_address(INPUT_REG_SYSTEM_COMPILE_TIME_H, compile_time_h);  
+    mb_set_input_reg_by_address(INPUT_REG_SYSTEM_COMPILE_TIME_L, compile_time_l);  
+}

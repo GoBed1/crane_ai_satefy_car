@@ -11,6 +11,23 @@
 #define LOGD(...) printf("[DEBUG] " __VA_ARGS__)
 #define LOGI(...) printf("[INFO]  " __VA_ARGS__)
 #define LOGE(...) printf("[ERROR] " __VA_ARGS__)
+
+//硬件版本号存放地址
+#define INPUT_REG_HARDWARE_VERSION_HIGH  0  
+#define INPUT_REG_HARDWARE_VERSION_LOW  1
+//软件版本号存放地址
+#define INPUT_REG_SOFTWARE_VERSION_HIGH  2   
+#define INPUT_REG_SOFTWARE_VERSION_LOW  3
+/* 编译时间存放地址 */
+#define INPUT_REG_SYSTEM_COMPILE_TIME_H   4  // 地址4: 编译时间高位 (MMDD)
+#define INPUT_REG_SYSTEM_COMPILE_TIME_L   5  // 地址5: 编译时间低位 (HHMM)
+/* 软硬件版本号值 */
+#define HARDWARE_VERSION_MAJOR  2   // 硬件 v2.0.0
+#define HARDWARE_VERSION_MINOR  0
+#define HARDWARE_VERSION_PATCH  0
+#define SOFTWARE_VERSION_MAJOR  2   // 软件 v2.0.0
+#define SOFTWARE_VERSION_MINOR  0
+#define SOFTWARE_VERSION_PATCH  0
 /* ========================================================================= */
 /* BMS 通信宏定义                                                         */
 /* ========================================================================= */
@@ -202,8 +219,8 @@ extern uint16_t car_main_status;
 /* ========================================================================= */
 /* 小车类型配置（平头 / 动臂）                                                */
 /* ========================================================================= */
-#define CRANE_TYPE_FLAT_TOP  0  // 平头塔吊
-#define CRANE_TYPE_LUFFING   1  // 动臂塔吊
+#define CRANE_TYPE_FLAT_TOP  1  // 平头塔吊
+#define CRANE_TYPE_LUFFING   2  // 动臂塔吊
 
 // 【修改点】在此处一键切换当前小车的类型！
 #define CURRENT_CRANE_TYPE   CRANE_TYPE_FLAT_TOP

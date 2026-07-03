@@ -160,10 +160,12 @@ void web_server_thread(void *argument)
 // 初始化应用层任务模块
 void init_app_car_task(void)
 {
+    mb_init_reg();
     specify_redirect_uart(&huart5);
     printf("\r\n[INFO] [BOARD] specify redirect printf to huart5\r\n");
     init_uart_manage(); // 初始化串口管理模块（gps、laser01/02）
-    mb_init_reg();
+    set_system_info_to_input_regs();
+
 #if (CURRENT_CRANE_TYPE == CRANE_TYPE_FLAT_TOP)
     init_modbus_master(); // 初始化modbus主机模块 (BMS、mppt等)
     // modbus读取线程
