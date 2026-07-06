@@ -57,14 +57,27 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define POWER_3V_Pin GPIO_PIN_6
+#define POWER_3V_GPIO_Port GPIOE
+#define POWER_5V_Pin GPIO_PIN_13
+#define POWER_5V_GPIO_Port GPIOC
 #define ETH_RST_Pin GPIO_PIN_0
 #define ETH_RST_GPIO_Port GPIOC
-#define LED0_Pin GPIO_PIN_9
-#define LED0_GPIO_Port GPIOE
+#define POWER_LASER_Pin GPIO_PIN_3
+#define POWER_LASER_GPIO_Port GPIOC
+#define GPS_EN_Pin GPIO_PIN_14
+#define GPS_EN_GPIO_Port GPIOB
+#define HEART_LED_Pin GPIO_PIN_10
+#define HEART_LED_GPIO_Port GPIOD
+#define POWER_4G_Pin GPIO_PIN_15
+#define POWER_4G_GPIO_Port GPIOA
+#define BRIDGE_EN_Pin GPIO_PIN_3
+#define BRIDGE_EN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define LOG_ERR(tag, ...) printf(__VA_ARGS__)
 #define LOG_INFO(tag, ...) printf(__VA_ARGS__)
+#define HTTP_URL "http://192.168.61.36/"
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -55,24 +55,24 @@ void mb_init_reg(void) {
  // 1. 初始化核心 API
     mb_api_init(&mb_config);
 
-    // 2. 挂载硬件 (绝对只能调用这一处！)
-    if (fs_mount_medium() != FS_OK) {
-        printf("[CRITICAL] W25Q128 挂载失败！检查 QSPI 配置和引脚！\r\n");
-        return; 
-    } else {
-        printf("[OK] W25Q128 挂载成功。\r\n");
-    }
+    // // 2. 挂载硬件 (绝对只能调用这一处！)
+    // if (fs_mount_medium() != FS_OK) {
+    //     printf("[CRITICAL] W25Q128 挂载失败！检查 QSPI 配置和引脚！\r\n");
+    //     return; 
+    // } else {
+    //     printf("[OK] W25Q128 挂载成功。\r\n");
+    // }
 
-    // 3. 尝试从 Flash 加载数据
-    fs_err_t load_err = fs_load_modbus_reg(); 
-    if (load_err == FS_OK) {
-        printf("[OK]The register data was successfully loaded from Flash。\r\n");
-    } else {
-        printf("[WARN] Flash has no valid data (error code :%d) and is initializing the default value...\r\n", load_err);
-        mb_default_reg(REG_TYPE_ALL); // 只有加载失败才去清零
-        fs_save_modbus_reg();         // 并创建初始文件
-    }
-    
+    // // 3. 尝试从 Flash 加载数据
+    // fs_err_t load_err = fs_load_modbus_reg(); 
+    // if (load_err == FS_OK) {
+    //     printf("[OK]The register data was successfully loaded from Flash。\r\n");
+    // } else {
+    //     printf("[WARN] Flash has no valid data (error code :%d) and is initializing the default value...\r\n", load_err);
+    //     mb_default_reg(REG_TYPE_ALL); // 只有加载失败才去清零
+    //     fs_save_modbus_reg();         // 并创建初始文件
+    // }
+    // mb_default_reg(REG_TYPE_COIL);
     // 4. 允许触发 Flash 写回调
-    enable_flash_save_cb = true;
+    enable_flash_save_cb = false;
 }

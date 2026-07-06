@@ -90,7 +90,7 @@ mb_err_t mb_set_coil_reg_by_address(uint16_t address, uint8_t value) {
     mb_ctx.coil_regs[address] = value ? 1 : 0;
     mb_release_mutex();
     
-    if (mb_ctx.flash_save_cb != NULL) mb_ctx.flash_save_cb();
+    // if (mb_ctx.flash_save_cb != NULL) mb_ctx.flash_save_cb();
     return MB_OK;
 }
 

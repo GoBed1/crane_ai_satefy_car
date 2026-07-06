@@ -71,6 +71,20 @@ void StartDefaultTask(void *argument);
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
+/* Hook prototypes */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
+
+/* USER CODE BEGIN 4 */
+// void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+// {
+//    /* Run time stack overflow checking is performed if
+   
+//    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+//    called if a stack overflow is detected. */
+   
+// }
+/* USER CODE END 4 */
+
 /**
   * @brief  FreeRTOS initialization
   * @param  None
@@ -123,22 +137,18 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
-  specify_redirect_uart(&huart1);
-    printf("\r\n[INFO] [BOARD] specify redirect printf to huart2\r\n");
-   extern struct netif gnetif;
-  while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
-  {
-    osDelay(100);
-  }
-  modbus_tcp_init_server();
+  
+  extern struct netif gnetif;
+    while (!netif_is_link_up(&gnetif) || !netif_is_up(&gnetif))
+    {
+        osDelay(100);
+    }
+    // 初始化modbus tcp server模块
+    modbus_tcp_init_server();
   /* Infinite loop */
-  uint16_t count = 0;
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
-    count=count % 100;
-    mb_set_holding_reg_by_address(1, count++);
-    osDelay(1000);
+    osDelay(10);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -150,6 +160,8 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
    /* ETH_CODE: add breakpoint when stack oveflow is detected by FreeRTOS.
     * Useful for debugging issues.
     */
+   printf ("1111111111Stack Overflow in task %s\n", pcTaskName);
+   NVIC_SystemReset();
    __BKPT(0);
 }
 /* USER CODE END Application */

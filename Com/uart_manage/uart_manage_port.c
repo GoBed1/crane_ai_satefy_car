@@ -14,7 +14,6 @@
 /* port.c */
 #include "uart_manage.h"
 #include "Modbus.h"
-extern RFIDClient RFID_client;
 extern EventGroupHandle_t eg; // 初始化事件组为NULL
 
 /* DMA buffer placement */
@@ -35,12 +34,26 @@ static uint8_t uart1_send_buff[256U] DMA_BUFFER;
 static uint8_t uart1_send_fifo_buff[256U] DMA_BUFFER;
 static uint8_t uart1_process_buff[256U * 4U] DMA_BUFFER;
 
-extern UART_HandleTypeDef huart5;
-extern DMA_HandleTypeDef hdma_uart5_rx;
-static uint8_t uart5_recv_buff[256U] DMA_BUFFER;
-static uint8_t uart5_send_buff[256U] DMA_BUFFER;
-static uint8_t uart5_send_fifo_buff[256U] DMA_BUFFER;
-static uint8_t uart5_process_buff[256U * 4U] DMA_BUFFER;
+extern UART_HandleTypeDef huart3;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+static uint8_t uart3_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart3_send_buff[256U] DMA_BUFFER;
+static uint8_t uart3_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart3_process_buff[256U * 4U] DMA_BUFFER;
+
+extern UART_HandleTypeDef huart6;
+extern DMA_HandleTypeDef hdma_usart6_rx;
+static uint8_t uart6_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart6_send_buff[256U] DMA_BUFFER;
+static uint8_t uart6_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart6_process_buff[256U * 4U] DMA_BUFFER;
+
+extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+static uint8_t uart2_recv_buff[256U] DMA_BUFFER;
+static uint8_t uart2_send_buff[256U] DMA_BUFFER;
+static uint8_t uart2_send_fifo_buff[256U] DMA_BUFFER;
+static uint8_t uart2_process_buff[256U * 4U] DMA_BUFFER;
 
 static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 {
@@ -49,19 +62,50 @@ static uint32_t echo_callback(uint8_t *buf, uint16_t len)
 }
 
 const uart_inferface_t uart_manage_table[] = {
+
   {
-    .name = "echo",
-    .uart_h = &huart1,
-    .dma_h = &hdma_usart1_rx,
-    .recv_buffer = uart1_recv_buff,
-    .recv_buffer_size = sizeof(uart1_recv_buff),
-    .process_buffer = uart1_process_buff,
-    .process_buffer_size = sizeof(uart1_process_buff),
-    .recv_callback = echo_callback,// callback_direct_mode
-    .send_buffer = uart1_send_buff,
-    .send_buffer_size = sizeof(uart1_send_buff),
-    .send_fifo_buffer = uart1_send_fifo_buff,
-    .send_fifo_size = sizeof(uart1_send_fifo_buff),
+    .name = "gps",
+    .uart_h = &huart3,
+    .dma_h = &hdma_usart3_rx,
+    .recv_buffer = uart3_recv_buff,
+    .recv_buffer_size = sizeof(uart3_recv_buff),
+    .process_buffer = uart3_process_buff,
+    .process_buffer_size = sizeof(uart3_process_buff),
+    .recv_callback = NULL,// ring_task_mode
+    .send_buffer = uart3_send_buff,
+    .send_buffer_size = sizeof(uart3_send_buff),
+    .send_fifo_buffer = uart3_send_fifo_buff,
+    .send_fifo_size = sizeof(uart3_send_fifo_buff),
+    .send_callback = NULL,
+  },
+  {
+    .name = "laser_01",
+    .uart_h = &huart6,
+    .dma_h = &hdma_usart6_rx,
+    .recv_buffer = uart6_recv_buff,
+    .recv_buffer_size = sizeof(uart6_recv_buff),
+    .process_buffer = uart6_process_buff,
+    .process_buffer_size = sizeof(uart6_process_buff),
+    .recv_callback = NULL, 
+    .send_buffer = uart6_send_buff,
+    .send_buffer_size = sizeof(uart6_send_buff),
+    .send_fifo_buffer = uart6_send_fifo_buff,
+    .send_fifo_size = sizeof(uart6_send_fifo_buff),
+    .send_callback = NULL,
+  },
+  {
+    .name = "laser_02",
+    .uart_h = &huart2,
+    .dma_h = &hdma_usart2_rx,
+    .recv_buffer = uart2_recv_buff,
+    .recv_buffer_size = sizeof(uart2_recv_buff),
+    .process_buffer = uart2_process_buff,
+    .process_buffer_size = sizeof(uart2_process_buff),
+    .recv_callback = NULL, 
+    .send_buffer = uart2_send_buff,
+    .send_buffer_size = sizeof(uart2_send_buff),
+    .send_fifo_buffer = uart2_send_fifo_buff,
+    .send_fifo_size = sizeof(uart2_send_fifo_buff),
     .send_callback = NULL,
   },
 };
@@ -71,7 +115,17 @@ const uart_inferface_t uart_manage_table[] = {
 
 void init_uart_manage(void)
 {
-  (void)uart_manage_init_table(uart_manage_table, uart_manage_table_size);
+  // (void)uart_manage_init_table(uart_manage_table, uart_manage_table_size);
+  for (uint16_t i = 0; i < uart_manage_table_size; i++)
+  {
+    uart_manage_register_interface((uart_inferface_t *)&uart_manage_table[i]);
+  }
+
+  // 2. 分别使能这三个串口的 DMA 接收
+  uart_manage_enable_dma_recv_by_name("gps");
+  uart_manage_enable_dma_recv_by_name("laser_01");
+  uart_manage_enable_dma_recv_by_name("laser_02");
+
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
@@ -132,6 +186,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
       (void)uart_manage_recv_idle_hook(m_obj, INTERRUPT_TYPE_UART, size);
     }
     (void)uart_manage_enable_dma_recv(huart);
+    return;
   }
 
  for (int i = 0; i < numberHandlers; i++)

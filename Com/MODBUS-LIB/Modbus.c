@@ -37,7 +37,9 @@
 
 #define lowByte(w) ((w) & 0xff)
 #define highByte(w) ((w) >> 8)
-
+#define LOGD(...) //printf("[DEBUG] " __VA_ARGS__)
+#define LOGI(...) printf("[INFO]  " __VA_ARGS__)
+#define LOGE(...) printf("[ERROR] " __VA_ARGS__)
 
 modbusHandler_t *mHandlers[MAX_M_HANDLERS];
 
@@ -716,18 +718,18 @@ void StartTaskModbusSlave(void *argument)
 	// }else if(modH->port == &huart8){
 	// 	strcpy(uart_str, "U8");
 	// }
-	printf("[%s]R:",uart_str);
+	LOGD("[%s]R:",uart_str);
     for (uint16_t i = 0; i < modH->u8BufferSize; i++) {
-        printf("%02X ", modH->u8Buffer[i]);
+        LOGD("%02X ", modH->u8Buffer[i]);
     }
-    printf("\r\n");
+    LOGD("\r\n");
 	
    if (modH->u8BufferSize < 7)
    {
       //The size of the frame is invalid
       modH->i8lastError = ERR_BAD_SIZE;
       modH->u16errCnt++;
-      printf("Error: Frame size too small\n");
+      LOGE("Error: Frame size too small\n");
 	  continue;
     }
 
@@ -1212,11 +1214,11 @@ void StartTaskModbusMaster(void *argument)
 	// }else if(modH->port == &huart8){
 	// 	strcpy(uart_str, "U8");
 	// }
-	printf("[%s]R:",uart_str);
+	LOGD("[%s]R:",uart_str);
 	for (uint16_t i = 0; i < modH->u8BufferSize; i++) {
-		printf("%02X ", modH->u8Buffer[i]);
+		LOGD("%02X ", modH->u8Buffer[i]);
 	}
-	printf("\r\n");
+	LOGD("\r\n");
 #endif
 	// check buffer size，if too small, return error
 	  if ( modH->u8BufferSize < 6){

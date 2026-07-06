@@ -128,8 +128,8 @@ uint32_t board_get_time_s(void)
 
 void board_config(void)
 {
-  specify_redirect_uart(&huart1);
-  printf("\r\nspecify redirect printf to huart1\r\n");
+  specify_redirect_uart(&huart5);
+  printf("\r\nspecify redirect printf to huart5\r\n");
 }
 
 void board_create_user_tasks(void)

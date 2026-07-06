@@ -41,7 +41,7 @@
 #define MODBUS_RX_BUF_LEN  260    // Enough for one complete Modbus-TCP PDU
 #define MODBUS_TX_BUF_LEN  260
 
-#define WORKER_TASK_STACK_SIZE 4096  // bytes for each per-client worker
+#define WORKER_TASK_STACK_SIZE 2048  // bytes for each per-client worker
 #define SERVER_TASK_PRIORITY   (osPriority_t)osPriorityNormal
 
 #define LAN8742A_MAX_CLIENTS 4
@@ -274,7 +274,7 @@ exit_task:
 void modbus_tcp_init_server(void)
 {
 // fs_mount_medium();
-  mb_init_reg();
+//   mb_init_reg();
   
   modbus_tcp_server_handle = osThreadNew(lan8742a_modbus_tcp_server_task, NULL, &modbus_tcp_server_attributes);
   if (modbus_tcp_server_handle == NULL)
