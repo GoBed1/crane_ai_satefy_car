@@ -28,6 +28,8 @@
 #define SOFTWARE_VERSION_MAJOR  2   // 软件 v2.0.0  
 #define SOFTWARE_VERSION_MINOR  0
 #define SOFTWARE_VERSION_PATCH  0
+
+#define COIL_REG_CMD_REBOOT 0 // 重置命令寄存器地址
 /* ========================================================================= */
 /* BMS 通信宏定义                                                         */
 /* ========================================================================= */

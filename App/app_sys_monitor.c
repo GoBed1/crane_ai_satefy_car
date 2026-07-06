@@ -52,6 +52,21 @@ void process_sys_monitor_logic(void)
 // 系统电源控制
 void power_control_logic(void)
 {
+    uint8_t reboot_cmd = 0;
+
+    // ================= 系统重启逻辑 =================
+    mb_get_coil_reg_by_address(COIL_REG_CMD_REBOOT, &reboot_cmd);
+    if (reboot_cmd == 1)
+    {
+        LOGI("[SYS] Reboot command received! System will reset in 1 second...\n");
+        
+        mb_set_coil_reg_by_address(COIL_REG_CMD_REBOOT, 0); 
+        
+        osDelay(1000);
+        
+        HAL_NVIC_SystemReset(); 
+    }
+
     uint8_t sleep_cmd = 0, sleep_status = 0;
 
     // 获取当前的模式指令和状态
