@@ -115,7 +115,17 @@ const uart_inferface_t uart_manage_table[] = {
 
 void init_uart_manage(void)
 {
-  (void)uart_manage_init_table(uart_manage_table, uart_manage_table_size);
+  // (void)uart_manage_init_table(uart_manage_table, uart_manage_table_size);
+  for (uint16_t i = 0; i < uart_manage_table_size; i++)
+  {
+    uart_manage_register_interface((uart_inferface_t *)&uart_manage_table[i]);
+  }
+
+  // 2. 分别使能这三个串口的 DMA 接收
+  uart_manage_enable_dma_recv_by_name("gps");
+  uart_manage_enable_dma_recv_by_name("laser_01");
+  uart_manage_enable_dma_recv_by_name("laser_02");
+
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
@@ -176,6 +186,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
       (void)uart_manage_recv_idle_hook(m_obj, INTERRUPT_TYPE_UART, size);
     }
     (void)uart_manage_enable_dma_recv(huart);
+    return;
   }
 
  for (int i = 0; i < numberHandlers; i++)
