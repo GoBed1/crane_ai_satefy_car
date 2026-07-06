@@ -523,7 +523,7 @@ void mg_error(struct mg_connection *c, const char *fmt, ...) {
 static char *s_addr;      // Current address to write to
 static size_t s_size;     // Firmware size to flash. In-progress indicator
 static uint32_t s_crc32;  // Firmware checksum
-
+extern volatile uint8_t is_ota_updating;
 bool mg_ota_flash_begin(size_t new_firmware_size, struct mg_flash *flash) {
   bool ok = false;
   if (s_size) {
@@ -537,6 +537,7 @@ bool mg_ota_flash_begin(size_t new_firmware_size, struct mg_flash *flash) {
       ok = true;
       s_size = new_firmware_size;
       MG_INFO(("Starting OTA, firmware size %lu", s_size));
+      is_ota_updating = 1;
     } else {
       MG_ERROR(("Firmware %lu is too big to fit %lu", new_firmware_size, half));
     }
@@ -9098,7 +9099,6 @@ static MG_SOCKET_TYPE raccept(MG_SOCKET_TYPE sock, union usa *usa,
   } while (MG_SOCK_INTR(fd));
   return fd;
 }
-extern volatile uint8_t is_ota_updating;
 static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
   struct mg_connection *c = NULL;
   union usa usa;
@@ -9122,7 +9122,6 @@ static void accept_conn(struct mg_mgr *mgr, struct mg_connection *lsn) {
     MG_ERROR(("%lu OOM", lsn->id));
     closesocket(fd);
   } else {
-    is_ota_updating = 1;
     tomgaddr(&usa, &c->rem, sa_len != sizeof(usa.sin));
     LIST_ADD_HEAD(struct mg_connection, &mgr->conns, c);
     c->fd = S2PTR(fd);
